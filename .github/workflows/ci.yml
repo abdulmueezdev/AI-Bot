@@ -1,4 +1,4 @@
-name: CI — Digital Clone AI Bot
+name: CI
 
 on:
   push:
@@ -6,48 +6,38 @@ on:
   pull_request:
     branches: [main]
 
-env:
-  PYTHON_VERSION: "3.11"
-
 jobs:
   lint-typecheck-test:
     name: Lint → Typecheck → Test
     runs-on: ubuntu-latest
 
-    env:
-      # Test-safe placeholder secrets — no real API calls in CI
-      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY || 'test-groq-key' }}
-      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY || 'test-openrouter-key' }}
-      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || 'test-gemini-key' }}
-      ENVIRONMENT: testing
-      LOG_LEVEL: WARNING
-      CHROMA_PERSIST_DIR: /tmp/ci_chroma
-      CLONE_DATA_DIR: ./backend/clones
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4.2.2
 
-      - name: Set up Python ${{ env.PYTHON_VERSION }}
+      - name: Set up Python 3.11
         uses: actions/setup-python@v5.3.0
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
+          python-version: "3.11"
 
       - name: Install dependencies
         working-directory: backend
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
 
-      - name: Lint with ruff
+      - name: Lint with Ruff
         working-directory: backend
         run: ruff check .
 
-      - name: Type check with mypy
+      - name: Type-check with MyPy
         working-directory: backend
-        run: mypy app/ --ignore-missing-imports --no-strict-optional
+        run: mypy --strict app/
 
       - name: Run tests with coverage
         working-directory: backend
-        run: pytest --cov=app --cov-report=term-missing --cov-fail-under=70 -v
+        run: pytest --cov=app --cov-fail-under=70
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          CLONE_ID: alucard
+          ENV: test
