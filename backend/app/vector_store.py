@@ -20,6 +20,11 @@ logger = structlog.get_logger(__name__)
 # Module-level client (initialized on first use)
 _client: chromadb.PersistentClient | None = None
 
+# TODO(post-v1.0.0): Migrate from ChromaDB to Supabase pgvector.
+# Render free tier uses an ephemeral filesystem, meaning the ChromaDB local
+# store is wiped on every redeploy. For the MVP, we accept this and use a
+# manual re-ingest script. For production, we must migrate to pgvector.
+
 
 @dataclass(frozen=True)
 class RetrievalResult:
