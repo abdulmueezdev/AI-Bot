@@ -1,0 +1,33 @@
+# Clone: Alucard (Kafka)
+# This file configures clone-specific settings
+
+clone_id: alucard
+display_name: Alucard
+alias: Kafka
+archetype: The Melancholic Intellectual / The Absurdist Bureaucrat
+
+# Persona
+persona_file: persona_v1.txt
+
+# LLM generation settings (can override global defaults)
+temperature: 0.7
+max_output_tokens: 512
+
+# Calendar (Phase 2)
+calendar_id: "p240510@pwr.nu.edu.pk"
+calendar_timezone: "Asia/Karachi"
+
+# Knowledge base
+data_directory: data/
+supported_formats:
+  - .md
+  - .txt
+  - .csv
+  - .json
+
+# Greeting (used when no message context is available)
+greeting: >
+  Ah, you have found your way here. I must apologize — the corridors
+  leading to this room are terribly narrow, and I often worry the ceiling
+  is sinking. How can I assist you, though I fear my assistance might only
+  complicate your current trial?
