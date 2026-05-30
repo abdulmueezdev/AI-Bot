@@ -1,0 +1,38 @@
+# render.yaml — Render.com deployment configuration
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: digital-clone-ai
+    runtime: python
+    region: oregon
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: ENVIRONMENT
+        value: production
+      - key: LOG_LEVEL
+        value: INFO
+      - key: CHROMA_PERSIST_DIR
+        value: /opt/render/project/src/chroma_data
+      - key: CLONE_DATA_DIR
+        value: /opt/render/project/src/clones
+      # Secrets — configure these in the Render dashboard
+      - key: GROQ_API_KEY
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      # Phase 2 — uncomment when ready
+      # - key: GOOGLE_SERVICE_ACCOUNT_JSON
+      #   sync: false
+      # - key: SUPABASE_URL
+      #   sync: false
+      # - key: SUPABASE_SERVICE_ROLE_KEY
+      #   sync: false

@@ -1,6 +1,7 @@
 """FastAPI application — entry point for the Digital Clone AI Chatbot.
 
-Configures: structured logging, CORS, lifespan events, router.
+Configures: structured logging, CORS, lifespan events, router,
+APScheduler for calendar background refresh.
 Run with: uvicorn app.main:app --reload
 """
 
@@ -17,6 +18,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 from app.router import router
+from app.routers.calendar import router as calendar_router
+from app.routers.session import router as session_router
 
 
 def _configure_logging() -> None:
@@ -45,6 +48,56 @@ def _configure_logging() -> None:
     )
 
 
+def _start_calendar_scheduler() -> None:
+    """Start the APScheduler background job for calendar refresh.
+
+    Refreshes calendar cache for all active personas every 15 minutes.
+    """
+    try:
+        from apscheduler.schedulers.background import BackgroundScheduler
+        from app.calendar_sync import get_calendar_sync
+
+        scheduler = BackgroundScheduler()
+        sync = get_calendar_sync()
+        settings = get_settings()
+
+        def refresh_all_calendars() -> None:
+            """Refresh calendar cache for all valid clones."""
+            import asyncio
+
+            for clone_id in settings.valid_clone_ids:
+                try:
+                    loop = asyncio.new_event_loop()
+                    loop.run_until_complete(sync.refresh(clone_id))
+                    loop.close()
+                except Exception as exc:
+                    log = structlog.get_logger("scheduler")
+                    log.error(
+                        "calendar_refresh_job_failed",
+                        clone_id=clone_id,
+                        error=str(exc),
+                    )
+
+        scheduler.add_job(
+            refresh_all_calendars,
+            "interval",
+            minutes=15,
+            id="calendar_refresh",
+            replace_existing=True,
+        )
+        scheduler.start()
+
+        log = structlog.get_logger("scheduler")
+        log.info("calendar_scheduler_started", interval_minutes=15)
+
+    except ImportError:
+        log = structlog.get_logger("scheduler")
+        log.warning("apscheduler_not_installed_calendar_refresh_disabled")
+    except Exception as exc:
+        log = structlog.get_logger("scheduler")
+        log.error("scheduler_start_failed", error=str(exc))
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan — startup and shutdown events."""
@@ -59,6 +112,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         valid_clones=sorted(settings.valid_clone_ids),
         chroma_dir=str(settings.chroma_path),
     )
+
+    # Start calendar background refresh
+    _start_calendar_scheduler()
 
     yield  # Application runs here
 
@@ -86,5 +142,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include router
+# Include routers
 app.include_router(router)
+app.include_router(calendar_router)
+app.include_router(session_router)
