@@ -18,7 +18,7 @@ from app.config import get_settings
 logger = structlog.get_logger(__name__)
 
 # Module-level client (initialized on first use)
-_client: chromadb.PersistentClient | None = None
+_client: chromadb.ClientAPI | None = None
 
 # TODO(post-v1.0.0): Migrate from ChromaDB to Supabase pgvector.
 # Render free tier uses an ephemeral filesystem, meaning the ChromaDB local
@@ -35,7 +35,7 @@ class RetrievalResult:
     similarity: float
 
 
-def _get_client() -> chromadb.PersistentClient:
+def _get_client() -> chromadb.ClientAPI:
     """Get or create the ChromaDB persistent client."""
     global _client
     if _client is None:
@@ -91,7 +91,7 @@ async def add_documents(
             ids=ids,
             documents=chunks,
             embeddings=embeddings,  # type: ignore[arg-type]
-            metadatas=metadatas,
+            metadatas=metadatas,  # type: ignore[arg-type]
         )
         return len(chunks)
 
@@ -161,7 +161,7 @@ async def query(
                 retrieval_results.append(
                     RetrievalResult(
                         text=doc,
-                        metadata=meta or {},
+                        metadata=meta or {},  # type: ignore[arg-type]
                         similarity=round(similarity, 4),
                     )
                 )
