@@ -67,6 +67,9 @@ async def embed_texts(
             batch_index=batch_start // batch_size,
         )
         all_embeddings.extend(batch_embeddings)
+        
+        # Rate limit protection for free tier
+        await asyncio.sleep(2.0)
 
     logger.info(
         "embedding_complete",

@@ -70,7 +70,7 @@ class Settings(BaseSettings):
     # ── Retry Settings ─────────────────────────────────────────────────
     max_retries: int = Field(default=3, description="Max retry attempts for external APIs")
     retry_delays: list[float] = Field(
-        default=[1.0, 2.0, 4.0],
+        default=[15.0, 30.0, 60.0],
         description="Exponential backoff delays in seconds",
     )
 

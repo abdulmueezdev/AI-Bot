@@ -75,7 +75,23 @@ async def _call_groq(
     prompt: PromptResult, *, clone_id: str, session_id: str,
 ) -> LLMResponse:
     """Call Groq API with 3-retry exponential backoff."""
+    import yaml
     settings = get_settings()
+    
+    # Load overrides from config.yaml
+    temperature = settings.llm_temperature
+    max_tokens = settings.max_output_tokens
+    config_path = settings.get_clone_config_path(clone_id)
+    if config_path.exists():
+        try:
+            config_data = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+            if "temperature" in config_data:
+                temperature = float(config_data["temperature"])
+            if "max_output_tokens" in config_data:
+                max_tokens = int(config_data["max_output_tokens"])
+        except Exception:
+            pass
+
     client = AsyncGroq(api_key=settings.groq_api_key)
     last_error: Exception | None = None
 
@@ -89,8 +105,8 @@ async def _call_groq(
                         {"role": "system", "content": prompt.system_prompt},
                         {"role": "user", "content": prompt.user_prompt},
                     ],
-                    max_tokens=settings.max_output_tokens,
-                    temperature=settings.llm_temperature,
+                    max_tokens=max_tokens,
+                    temperature=temperature,
                 )
                 elapsed_ms = (time.monotonic() - start_time) * 1000
                 text = response.choices[0].message.content or ""
@@ -124,8 +140,23 @@ async def _call_openrouter(
     prompt: PromptResult, *, clone_id: str, session_id: str,
 ) -> LLMResponse:
     """Call OpenRouter API with 3-retry exponential backoff."""
+    import yaml
     settings = get_settings()
     last_error: Exception | None = None
+    
+    # Load overrides from config.yaml
+    temperature = settings.llm_temperature
+    max_tokens = settings.max_output_tokens
+    config_path = settings.get_clone_config_path(clone_id)
+    if config_path.exists():
+        try:
+            config_data = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+            if "temperature" in config_data:
+                temperature = float(config_data["temperature"])
+            if "max_output_tokens" in config_data:
+                max_tokens = int(config_data["max_output_tokens"])
+        except Exception:
+            pass
 
     for attempt in range(settings.max_retries):
         try:
@@ -145,8 +176,8 @@ async def _call_openrouter(
                             {"role": "system", "content": prompt.system_prompt},
                             {"role": "user", "content": prompt.user_prompt},
                         ],
-                        "max_tokens": settings.max_output_tokens,
-                        "temperature": settings.llm_temperature,
+                        "max_tokens": max_tokens,
+                        "temperature": temperature,
                     },
                 )
             elapsed_ms = (time.monotonic() - start_time) * 1000

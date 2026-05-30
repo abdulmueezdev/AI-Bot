@@ -17,7 +17,7 @@ from pathlib import Path
 # Add backend to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent / "backend"))
 
-from app.ingest import ingest_all_clone_data
+from app.ingest import ingest_clone_data
 from app.vector_store import delete_collection
 
 async def main() -> None:
@@ -42,8 +42,8 @@ async def main() -> None:
 
     # Ingest all data
     try:
-        count = await ingest_all_clone_data(clone_id)
-        print(f"Successfully re-ingested {count} documents for {clone_id}.")
+        stats = await ingest_clone_data(clone_id)
+        print(f"Successfully re-ingested {stats.chunks_created} chunks from {stats.files_processed} files for {clone_id}.")
     except Exception as e:
         print(f"Error during ingestion: {e}")
         sys.exit(1)
