@@ -151,6 +151,10 @@ def _load_and_chunk_file(file_path: Path, clone_id: str) -> list[Chunk]:
         List of Chunk objects.
     """
     suffix = file_path.suffix.lower()
+    
+    if suffix == ".pdf":
+        return _chunk_pdf(file_path, clone_id)
+
     content = file_path.read_text(encoding="utf-8")
 
     if suffix == ".md" or suffix == ".txt":
@@ -166,6 +170,30 @@ def _load_and_chunk_file(file_path: Path, clone_id: str) -> list[Chunk]:
             file=file_path.name,
             suffix=suffix,
         )
+        return []
+
+def _chunk_pdf(file_path: Path, clone_id: str) -> list[Chunk]:
+    """Chunk PDF — extract text and chunk it."""
+    try:
+        from pypdf import PdfReader
+    except ImportError:
+        logger.error("pypdf_missing", clone_id=clone_id)
+        return []
+        
+    try:
+        reader = PdfReader(str(file_path))
+        text = ""
+        for page in reader.pages:
+            page_text = page.extract_text()
+            if page_text:
+                text += page_text + "\n\n"
+        
+        if not text.strip():
+            logger.warning("pdf_no_text_extracted", file=file_path.name)
+            
+        return _chunk_markdown(text, file_path.name, clone_id)
+    except Exception as e:
+        logger.error("pdf_extraction_error", file=file_path.name, error=str(e))
         return []
 
 
