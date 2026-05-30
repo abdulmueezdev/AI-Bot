@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 import chromadb
 import structlog
@@ -18,7 +18,7 @@ from app.config import get_settings
 logger = structlog.get_logger(__name__)
 
 # Module-level client (initialized on first use)
-_client: chromadb.ClientAPI | None = None
+_client: Any | None = None
 
 # TODO(post-v1.0.0): Migrate from ChromaDB to Supabase pgvector.
 # Render free tier uses an ephemeral filesystem, meaning the ChromaDB local
@@ -35,7 +35,7 @@ class RetrievalResult:
     similarity: float
 
 
-def _get_client() -> chromadb.ClientAPI:
+def _get_client() -> Any:
     """Get or create the ChromaDB persistent client."""
     global _client
     if _client is None:
@@ -90,8 +90,8 @@ async def add_documents(
         collection.upsert(
             ids=ids,
             documents=chunks,
-            embeddings=embeddings,  # type: ignore[arg-type]
-            metadatas=metadatas,  # type: ignore[arg-type]
+            embeddings=embeddings,
+            metadatas=metadatas,
         )
         return len(chunks)
 
@@ -142,7 +142,7 @@ async def query(
             return []
 
         results = collection.query(
-            query_embeddings=[query_embedding],  # type: ignore[arg-type]
+            query_embeddings=[query_embedding],
             n_results=top_k,
             where={"clone_id": clone_id},  # Enforce clone isolation at query level
             include=["documents", "metadatas", "distances"],
@@ -161,7 +161,7 @@ async def query(
                 retrieval_results.append(
                     RetrievalResult(
                         text=doc,
-                        metadata=meta or {},  # type: ignore[arg-type]
+                        metadata=meta or {},
                         similarity=round(similarity, 4),
                     )
                 )
@@ -196,7 +196,7 @@ async def get_collection_count(clone_id: str) -> int:
         client = _get_client()
         try:
             collection = client.get_collection(name=_collection_name(clone_id))
-            return collection.count()
+            return int(collection.count())
         except Exception:
             return 0
 

@@ -102,7 +102,7 @@ class CalendarSync:
             from googleapiclient.discovery import build
 
             credentials_info = json.loads(sa_json)
-            credentials = service_account.Credentials.from_service_account_info(
+            credentials = service_account.Credentials.from_service_account_info(  # type: ignore[no-untyped-call]
                 credentials_info,
                 scopes=["https://www.googleapis.com/auth/calendar.readonly"],
             )

@@ -1,0 +1,11 @@
+[tool.mypy]
+strict = true
+
+[[tool.mypy.overrides]]
+module = [
+    "chromadb.*",
+    "googleapiclient.*",
+    "google.oauth2.*",
+    "apscheduler.*"
+]
+ignore_missing_imports = true

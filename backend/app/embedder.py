@@ -184,4 +184,8 @@ def _do_embed(texts: list[str], *, task_type: str) -> list[list[float]]:
         ),
     )
 
-    return [emb.values for emb in result.embeddings]
+    if not result.embeddings:
+        return []
+    
+    from typing import cast
+    return [cast(list[float], emb.values) for emb in result.embeddings]

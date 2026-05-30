@@ -512,7 +512,7 @@ class MemoryManager:
 
             parsed = json.loads(text)
             if isinstance(parsed, list):
-                return parsed  # type: ignore[no-any-return]
+                return parsed
             return []
         except (json.JSONDecodeError, ValueError):
             logger.warning("entity_parse_failed", raw_text=text[:200])
