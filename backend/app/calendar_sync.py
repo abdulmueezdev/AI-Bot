@@ -13,7 +13,6 @@ Phase 2 implementation — replaces Phase 1 stub.
 from __future__ import annotations
 
 import json
-import logging
 import os
 import time
 from dataclasses import dataclass, field
@@ -144,7 +143,7 @@ class CalendarSync:
             return None
 
         # Attempt to fetch fresh data
-        success = await self.refresh(clone_id, days_ahead=days_ahead)
+        await self.refresh(clone_id, days_ahead=days_ahead)
 
         cache = self._cache.get(clone_id)
         if cache and cache.events:

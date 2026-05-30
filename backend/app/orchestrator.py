@@ -14,7 +14,7 @@ import structlog
 
 from app.config import get_settings
 from app.embedder import embed_query
-from app.llm_client import LLMResponse, LLMUnavailableError, generate
+from app.llm_client import LLMResponse, generate
 from app.memory_manager import get_memory_manager
 from app.calendar_sync import get_calendar_sync
 from app.prompt_builder import build_prompt, detect_calendar_query

@@ -14,7 +14,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.vector_store import RetrievalResult, query, get_collection_count, add_documents
+from app.vector_store import query, get_collection_count, add_documents
 
 
 @pytest.mark.asyncio

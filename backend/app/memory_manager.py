@@ -14,12 +14,10 @@ Session lifecycle:
 from __future__ import annotations
 
 import json
-import logging
 import time
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any
 
 import structlog
 

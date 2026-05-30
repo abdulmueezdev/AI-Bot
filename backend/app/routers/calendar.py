@@ -6,7 +6,6 @@ for a given persona's calendar integration.
 
 from __future__ import annotations
 
-from typing import Any
 
 import structlog
 from fastapi import APIRouter

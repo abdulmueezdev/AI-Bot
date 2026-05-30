@@ -13,7 +13,6 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import patch
 
-import pytest
 
 from app.prompt_builder import build_prompt, count_tokens, PromptResult
 from app.vector_store import RetrievalResult

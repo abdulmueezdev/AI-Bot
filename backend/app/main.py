@@ -8,7 +8,6 @@ Run with: uvicorn app.main:app --reload
 from __future__ import annotations
 
 import logging
-import sys
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
