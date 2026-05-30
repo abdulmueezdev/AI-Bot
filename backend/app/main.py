@@ -7,6 +7,7 @@ Run with: uvicorn app.main:app --reload
 
 from __future__ import annotations
 
+import os
 import logging
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
@@ -132,10 +133,15 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS — permissive for development
+# CORS — specific allowed origins for production frontend
+allowed_origins = [
+    "http://localhost:3000",           # local dev
+    os.getenv("FRONTEND_URL", ""),     # Vercel URL via env var
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
