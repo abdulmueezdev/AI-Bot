@@ -10,6 +10,9 @@ jobs:
   lint-typecheck-test:
     name: Lint → Typecheck → Test
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
 
     steps:
       - name: Checkout code
@@ -21,19 +24,15 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        working-directory: backend
         run: pip install -r requirements.txt
 
       - name: Lint with Ruff
-        working-directory: backend
         run: ruff check .
 
       - name: Type-check with MyPy
-        working-directory: backend
         run: mypy --strict app/
 
       - name: Run tests with coverage
-        working-directory: backend
         run: pytest --cov=app --cov-fail-under=70
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
