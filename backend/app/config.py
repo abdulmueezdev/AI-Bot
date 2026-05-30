@@ -34,7 +34,7 @@ class Settings(BaseSettings):
 
     # ── Model Selection ────────────────────────────────────────────────
     groq_model: str = Field(
-        default="llama-3.1-70b-versatile",
+        default="llama-3.3-70b-versatile",
         description="Primary Groq model identifier",
     )
     openrouter_model: str = Field(
