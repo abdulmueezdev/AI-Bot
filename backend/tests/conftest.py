@@ -22,6 +22,8 @@ os.environ.setdefault("ENVIRONMENT", "testing")
 os.environ.setdefault("LOG_LEVEL", "DEBUG")
 os.environ.setdefault("CHROMA_PERSIST_DIR", "/tmp/test_chroma")
 os.environ.setdefault("CLONE_DATA_DIR", "/tmp/test_clones")
+os.environ.setdefault("SUPABASE_URL", "https://test-project.supabase.co")
+os.environ.setdefault("SUPABASE_KEY", "test-supabase-anon-key")
 
 
 @pytest.fixture(autouse=True)
@@ -32,6 +34,17 @@ def _clear_settings_cache() -> Generator[None, None, None]:
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
+
+
+@pytest.fixture(autouse=True)
+def _reset_supabase_client() -> Generator[None, None, None]:
+    """Reset the module-level Supabase client between tests."""
+    import app.vector_store as vs
+
+    original = vs._client
+    vs._client = None
+    yield
+    vs._client = original
 
 
 @pytest.fixture()
@@ -47,6 +60,8 @@ def mock_settings() -> Any:
         log_level="DEBUG",
         chroma_persist_dir="/tmp/test_chroma",
         clone_data_dir="/tmp/test_clones",
+        supabase_url="https://test-project.supabase.co",
+        supabase_key="test-supabase-anon-key",
         valid_clone_ids=frozenset({"alucard", "testclone"}),
     )
 
@@ -104,27 +119,34 @@ def mock_prompt_result() -> Any:
 
 
 @pytest.fixture()
-def mock_chromadb_collection() -> MagicMock:
-    """Return a mock ChromaDB collection with query support."""
-    collection = MagicMock()
-    collection.count.return_value = 42
-    collection.query.return_value = {
-        "ids": [["id1", "id2"]],
-        "documents": [
-            [
-                "Alucard believes hope is the cruelest instrument.",
-                "The burden of knowledge is to act.",
-            ]
-        ],
-        "metadatas": [
-            [
-                {"clone_id": "alucard", "source_file": "diaries.md"},
-                {"clone_id": "alucard", "source_file": "parables.md"},
-            ]
-        ],
-        "distances": [[0.08, 0.15]],
-    }
-    return collection
+def mock_supabase_client() -> MagicMock:
+    """Return a mock Supabase client with chainable table/rpc support."""
+    client = MagicMock()
+
+    # Mock table().select().eq().execute() chain
+    mock_response = MagicMock()
+    mock_response.data = []
+    mock_response.count = 0
+
+    # Make all chainable methods return the same mock
+    table_mock = MagicMock()
+    table_mock.select.return_value = table_mock
+    table_mock.insert.return_value = table_mock
+    table_mock.upsert.return_value = table_mock
+    table_mock.delete.return_value = table_mock
+    table_mock.eq.return_value = table_mock
+    table_mock.order.return_value = table_mock
+    table_mock.limit.return_value = table_mock
+    table_mock.execute.return_value = mock_response
+
+    client.table.return_value = table_mock
+
+    # Mock RPC calls
+    rpc_mock = MagicMock()
+    rpc_mock.execute.return_value = mock_response
+    client.rpc.return_value = rpc_mock
+
+    return client
 
 
 @pytest.fixture()

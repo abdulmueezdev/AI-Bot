@@ -77,11 +77,21 @@ class Settings(BaseSettings):
     # ── Storage ────────────────────────────────────────────────────────
     chroma_persist_dir: str = Field(
         default="./chroma_data",
-        description="ChromaDB persistent storage directory",
+        description="ChromaDB persistent storage directory (legacy, unused after Supabase migration)",
     )
     clone_data_dir: str = Field(
         default="./clones",
         description="Root directory for clone data",
+    )
+
+    # ── Supabase ───────────────────────────────────────────────────────
+    supabase_url: str = Field(
+        default="",
+        description="Supabase project URL",
+    )
+    supabase_key: str = Field(
+        default="",
+        description="Supabase anon/public API key",
     )
 
     # ── Application ────────────────────────────────────────────────────

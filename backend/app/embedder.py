@@ -177,7 +177,7 @@ def _do_embed(texts: list[str], *, task_type: str) -> list[list[float]]:
 
     result = client.models.embed_content(
         model=settings.embedding_model,
-        contents=texts,
+        contents=texts,  # type: ignore[arg-type]
         config=types.EmbedContentConfig(
             task_type=task_type,
             output_dimensionality=settings.embedding_dimensions,

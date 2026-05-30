@@ -1,8 +1,8 @@
 """Memory manager — 3-tier memory system for digital clones.
 
 Tier 1: Short-term buffer — in-memory deque, max 10 turns per session.
-Tier 2: Episodic memory — summarized past sessions in ChromaDB.
-Tier 3: Entity memory — structured entities in Supabase (with in-memory fallback).
+Tier 2: Episodic memory — summarized past sessions in Supabase (pgvector).
+Tier 3: Entity memory — structured entities in Supabase.
 
 Session lifecycle:
 - Each interaction is stored in the short-term buffer.
@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import json
 import time
-from collections import defaultdict, deque
+from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
@@ -95,18 +95,14 @@ class MemoryManager:
     """3-tier memory system for digital clones.
 
     Tier 1: Short-term session buffer (in-memory deque).
-    Tier 2: Episodic memory (ChromaDB collection per clone).
-    Tier 3: Entity memory (Supabase with in-memory fallback).
+    Tier 2: Episodic memory (Supabase pgvector).
+    Tier 3: Entity memory (Supabase).
     """
 
     def __init__(self) -> None:
         """Initialize the memory manager with empty session buffers."""
         # Tier 1: {(clone_id, session_id): SessionState}
         self._sessions: dict[tuple[str, str], SessionState] = {}
-
-        # Tier 3 fallback: in-memory entity store
-        # {clone_id: {entity_name: EntityRecord}}
-        self._entity_store: dict[str, dict[str, EntityRecord]] = defaultdict(dict)
 
     # ── Tier 1: Short-Term Buffer ──────────────────────────────────────
 
@@ -330,7 +326,10 @@ class MemoryManager:
         summary: str,
         turn_count: int,
     ) -> None:
-        """Store a session summary as an episodic memory embedding.
+        """Store a session summary as an episodic memory in Supabase.
+
+        Embeds the summary and inserts it into the episodic_memory table
+        with its embedding vector for future similarity retrieval.
 
         Args:
             clone_id: The clone identifier.
@@ -340,40 +339,31 @@ class MemoryManager:
         """
         try:
             from app.embedder import embed_texts
-            from app.vector_store import add_documents
 
             # Embed the summary
             embeddings = await embed_texts(
                 [summary], clone_id=clone_id, task_type="RETRIEVAL_DOCUMENT"
             )
 
-            now = datetime.now(timezone.utc).isoformat()
-            word_count = len(summary.split())
+            # Import Supabase client from vector_store
+            from app.vector_store import _get_client
 
-            # Store in episodic memory collection
-            # Note: We use a separate collection naming pattern
-            await add_documents(
-                f"episodic_{clone_id}",
-                chunks=[summary],
-                embeddings=embeddings,
-                metadatas=[
-                    {
-                        "clone_id": clone_id,
-                        "session_id": session_id,
-                        "timestamp": now,
-                        "turn_count": turn_count,
-                        "summary_word_count": word_count,
-                        "memory_type": "episodic",
-                    }
-                ],
-                ids=[f"episodic_{clone_id}_{session_id}"],
-            )
+            client = _get_client()
+
+            client.table("episodic_memory").insert(
+                {
+                    "clone_id": clone_id,
+                    "session_id": session_id,
+                    "summary": summary,
+                    "embedding": json.dumps(embeddings[0]),
+                }
+            ).execute()
 
             logger.info(
                 "episodic_memory_stored",
                 clone_id=clone_id,
                 session_id=session_id,
-                word_count=word_count,
+                word_count=len(summary.split()),
             )
 
         except Exception as exc:
@@ -389,10 +379,10 @@ class MemoryManager:
     async def get_episodic_context(
         self, clone_id: str, query: str
     ) -> list[str]:
-        """Retrieve relevant past conversation summaries.
+        """Retrieve relevant past conversation summaries via Supabase RPC.
 
-        Embeds the query and searches the episodic memory collection
-        for the top-2 most relevant summaries.
+        Embeds the query and searches the episodic_memory table
+        for the top-2 most relevant summaries using vector similarity.
 
         Args:
             clone_id: The clone identifier.
@@ -403,16 +393,25 @@ class MemoryManager:
         """
         try:
             from app.embedder import embed_query
-            from app.vector_store import query as vector_query
+            from app.vector_store import _get_client
 
             query_embedding = await embed_query(query, clone_id=clone_id)
-            results = await vector_query(
-                f"episodic_{clone_id}",
-                query_embedding,
-                top_k=EPISODIC_TOP_K,
-            )
+            client = _get_client()
 
-            summaries = [r.text for r in results if r.similarity > 0.5]
+            response = client.rpc(
+                "match_episodic_memory",
+                {
+                    "query_embedding": json.dumps(query_embedding),
+                    "match_count": EPISODIC_TOP_K,
+                    "filter_clone_id": clone_id,
+                },
+            ).execute()
+
+            summaries = [
+                row["summary"]
+                for row in (response.data or [])
+                if float(row.get("similarity", 0)) > 0.5
+            ]
 
             logger.info(
                 "episodic_context_retrieved",
@@ -435,10 +434,10 @@ class MemoryManager:
     async def _extract_and_store_entities(
         self, clone_id: str, summary: str
     ) -> None:
-        """Extract entities from a summary and store them.
+        """Extract entities from a summary and store them in Supabase.
 
         Uses the LLM to extract named entities, then upserts them
-        to the entity store (Supabase or in-memory fallback).
+        to the entity_memory table in Supabase.
 
         Args:
             clone_id: The clone identifier.
@@ -465,16 +464,26 @@ class MemoryManager:
             # Parse JSON response
             entities = self._parse_entity_response(response.text)
 
+            from app.vector_store import _get_client
+
+            client = _get_client()
             now = datetime.now(timezone.utc).isoformat()
+
             for entity in entities:
-                record = EntityRecord(
-                    entity_type=entity.get("entity_type", "unknown"),
-                    entity_name=entity.get("entity_name", ""),
-                    context=entity.get("context", ""),
-                    last_updated=now,
-                )
-                if record.entity_name:
-                    self._entity_store[clone_id][record.entity_name] = record
+                entity_name = entity.get("entity_name", "")
+                if not entity_name:
+                    continue
+
+                client.table("entity_memory").upsert(
+                    {
+                        "clone_id": clone_id,
+                        "entity_name": entity_name,
+                        "entity_type": entity.get("entity_type", "unknown"),
+                        "context": entity.get("context", ""),
+                        "updated_at": now,
+                    },
+                    on_conflict="clone_id,entity_name",
+                ).execute()
 
             logger.info(
                 "entities_extracted",
@@ -521,7 +530,7 @@ class MemoryManager:
     async def get_entity_context(
         self, clone_id: str, query: str
     ) -> list[dict[str, str]]:
-        """Retrieve relevant entities for a query.
+        """Retrieve relevant entities for a query from Supabase.
 
         Returns the top-5 most recently updated entities for the clone.
 
@@ -532,25 +541,36 @@ class MemoryManager:
         Returns:
             List of entity dicts with type, name, and context.
         """
-        entities = self._entity_store.get(clone_id, {})
-        if not entities:
+        try:
+            from app.vector_store import _get_client
+
+            client = _get_client()
+
+            response = (
+                client.table("entity_memory")
+                .select("entity_type, entity_name, context")
+                .eq("clone_id", clone_id)
+                .order("updated_at", desc=True)
+                .limit(ENTITY_TOP_K)
+                .execute()
+            )
+
+            return [
+                {
+                    "entity_type": row["entity_type"],
+                    "entity_name": row["entity_name"],
+                    "context": row["context"],
+                }
+                for row in (response.data or [])
+            ]
+
+        except Exception as exc:
+            logger.debug(
+                "entity_context_retrieval_failed",
+                clone_id=clone_id,
+                error=str(exc),
+            )
             return []
-
-        # Return top-5 most recently updated
-        sorted_entities = sorted(
-            entities.values(),
-            key=lambda e: e.last_updated,
-            reverse=True,
-        )[:ENTITY_TOP_K]
-
-        return [
-            {
-                "entity_type": e.entity_type,
-                "entity_name": e.entity_name,
-                "context": e.context,
-            }
-            for e in sorted_entities
-        ]
 
 
 # ── Module-level singleton ─────────────────────────────────────────────

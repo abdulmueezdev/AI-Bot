@@ -16,8 +16,8 @@ httpx==0.28.1
 # Embeddings
 google-genai==2.7.0
 
-# Vector store
-chromadb==1.5.9
+# Vector store (Supabase pgvector via REST)
+supabase==2.10.0
 
 # Token counting
 tiktoken==0.13.0
