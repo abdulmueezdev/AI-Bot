@@ -33,9 +33,9 @@ logger = structlog.get_logger(__name__)
 
 # ── Token Budget Constants ─────────────────────────────────────────────
 
-TOTAL_BUDGET: int = 4000
+TOTAL_BUDGET: int = 3600
 IDENTITY_BUDGET: int = 300
-FEW_SHOT_BUDGET: int = 400
+FEW_SHOT_BUDGET: int = 800
 CALENDAR_BUDGET: int = 300
 ENTITY_BUDGET: int = 200
 MEMORY_BUDGET: int = 400
@@ -259,6 +259,9 @@ def build_prompt(
         few_shot_block += "\n"
     breakdown.few_shot = count_tokens(few_shot_block)
 
+    if few_shot_block:
+        system_prompt += '\n\n' + few_shot_block
+
     # ── Block 8: User Query ───────────────────────────────────────────
     query_section = QUERY_TEMPLATE.format(query=query)
     if count_tokens(query_section) > QUERY_BUDGET:
@@ -374,8 +377,6 @@ def build_prompt(
 
     # ── Assemble user prompt ───────────────────────────────────────────
     user_prompt_parts: list[str] = []
-    if few_shot_block:
-        user_prompt_parts.append(few_shot_block)
     if calendar_block:
         user_prompt_parts.append(calendar_block)
     if entity_block:
@@ -402,8 +403,6 @@ def build_prompt(
 
         # Rebuild user prompt
         user_prompt_parts_rebuild: list[str] = []
-        if few_shot_block:
-            user_prompt_parts_rebuild.append(few_shot_block)
         if calendar_block:
             user_prompt_parts_rebuild.append(calendar_block)
         if entity_block:

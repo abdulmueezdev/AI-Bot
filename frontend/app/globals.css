@@ -2,8 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  body {
-    @apply bg-[#0a0a0a] text-gray-100 antialiased;
-  }
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: #0a0a0a;
+  color: white;
 }

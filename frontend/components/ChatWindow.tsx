@@ -1,14 +1,17 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useReducer } from "react";
+import { useEffect, useRef, useCallback, useReducer, useState } from "react";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+import { ArrowUpIcon } from "lucide-react";
 import MessageBubble from "./MessageBubble";
-import { sendMessage } from "../lib/api";
+import { sendMessage } from "@/lib/api";
 
+// ── Types ──────────────────────────────────────────────────────────────────
 type Message = {
   id: string;
-  role: "user" | "assistant" | "system";
+  role: "user" | "assistant";
   content: string;
-  timestamp: Date;
 };
 
 type State = {
@@ -17,166 +20,207 @@ type State = {
 };
 
 type Action =
-  | { type: "ADD_MESSAGE"; payload: Message }
-  | { type: "SET_LOADING"; payload: boolean };
+  | { type: "ADD_MESSAGE"; message: Message }
+  | { type: "SET_LOADING"; loading: boolean };
 
-const initialState: State = {
-  messages: [
-    {
-      id: "welcome",
-      role: "assistant",
-      content: "I am Alucard. State your business, mortal.",
-      timestamp: new Date(),
-    },
-  ],
-  isLoading: false,
-};
-
-function chatReducer(state: State, action: Action): State {
+function reducer(state: State, action: Action): State {
   switch (action.type) {
     case "ADD_MESSAGE":
-      return { ...state, messages: [...state.messages, action.payload] };
+      return { ...state, messages: [...state.messages, action.message] };
     case "SET_LOADING":
-      return { ...state, isLoading: action.payload };
+      return { ...state, isLoading: action.loading };
     default:
       return state;
   }
 }
 
-export default function ChatWindow() {
-  const [state, dispatch] = useReducer(chatReducer, initialState);
-  const [inputValue, setInputValue] = useState("");
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+// ── Auto-resize hook ───────────────────────────────────────────────────────
+function useAutoResizeTextarea(minHeight: number, maxHeight = 200) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  const adjustHeight = useCallback(
+    (reset?: boolean) => {
+      const el = textareaRef.current;
+      if (!el) return;
+      el.style.height = `${minHeight}px`;
+      if (!reset) {
+        el.style.height = `${Math.min(el.scrollHeight, maxHeight)}px`;
+      }
+    },
+    [minHeight, maxHeight]
+  );
 
   useEffect(() => {
-    scrollToBottom();
+    if (textareaRef.current)
+      textareaRef.current.style.height = `${minHeight}px`;
+  }, [minHeight]);
+
+  useEffect(() => {
+    const handler = () => adjustHeight();
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, [adjustHeight]);
+
+  return { textareaRef, adjustHeight };
+}
+
+// ── Main Component ─────────────────────────────────────────────────────────
+export default function ChatWindow() {
+  const [state, dispatch] = useReducer(reducer, {
+    messages: [],
+    isLoading: false,
+  });
+  const [input, setInput] = useState("");
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const { textareaRef, adjustHeight } = useAutoResizeTextarea(60, 200);
+
+
+
+  // Auto-scroll to latest message
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [state.messages, state.isLoading]);
 
-  // Focus input on mount
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
-
   const handleSend = async () => {
-    if (!inputValue.trim() || state.isLoading) return;
+    const text = input.trim();
+    if (!text || state.isLoading) return;
 
     const userMsg: Message = {
       id: crypto.randomUUID(),
       role: "user",
-      content: inputValue.trim(),
-      timestamp: new Date(),
+      content: text,
     };
 
-    dispatch({ type: "ADD_MESSAGE", payload: userMsg });
-    setInputValue("");
-    dispatch({ type: "SET_LOADING", payload: true });
+    dispatch({ type: "ADD_MESSAGE", message: userMsg });
+    setInput("");
+    adjustHeight(true);
+    dispatch({ type: "SET_LOADING", loading: true });
 
     try {
-      const data = await sendMessage(userMsg.content);
-      
-      const assistantMsg: Message = {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        content: data.response,
-        timestamp: new Date(),
-      };
-      
-      dispatch({ type: "ADD_MESSAGE", payload: assistantMsg });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Alucard is unavailable. Try again shortly.";
+      // sendMessage from lib/api.ts — DO NOT change api.ts
+      const reply = await sendMessage(text);
       dispatch({
         type: "ADD_MESSAGE",
-        payload: {
+        message: {
           id: crypto.randomUUID(),
-          role: "system",
-          content: errorMessage,
-          timestamp: new Date(),
+          role: "assistant",
+          content: reply.response,
+        },
+      });
+    } catch {
+      dispatch({
+        type: "ADD_MESSAGE",
+        message: {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: "Something went wrong. Try again.",
         },
       });
     } finally {
-      dispatch({ type: "SET_LOADING", payload: false });
-      // Re-focus input after response
-      setTimeout(() => inputRef.current?.focus(), 10);
+      dispatch({ type: "SET_LOADING", loading: false });
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
   };
 
+  const hasMessages = state.messages.length > 0;
+
   return (
-    <div className="flex flex-col h-screen max-w-4xl mx-auto w-full relative bg-[#0a0a0a]">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-[#0a0a0a]/90 backdrop-blur-sm border-b border-[#1f1f1f] py-4 px-6 flex items-center justify-center shadow-sm shadow-black/50">
-        <h1 className="text-xl font-serif text-gray-200 tracking-wider">
-          <span className="text-[#8B0000]">A</span>LUCARD
-        </h1>
-      </div>
+    <div className="flex flex-col h-screen bg-[#0a0a0a] text-white">
 
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 scroll-smooth">
-        <div className="flex flex-col space-y-2">
-          {state.messages.map((msg) => (
-            <MessageBubble key={msg.id} {...msg} />
-          ))}
-          
-          {state.isLoading && (
-            <div className="flex w-full mb-6 justify-start">
-              <div className="flex max-w-[85%] sm:max-w-[75%] flex-row">
-                <div className="flex-shrink-0 mr-3 mt-1">
-                  <div className="w-8 h-8 rounded-full bg-[#8B0000] flex items-center justify-center text-white font-serif font-bold text-sm shadow-md">
-                    A
-                  </div>
-                </div>
-                <div className="flex flex-col">
-                  <div className="flex items-baseline mb-1 justify-start mr-2">
-                    <span className="text-xs font-semibold text-gray-400">Alucard</span>
-                  </div>
-                  <div className="px-5 py-4 rounded-2xl shadow-sm bg-[#111111] border border-[#8B0000]/30 rounded-tl-none flex items-center space-x-1.5 h-11">
-                    <div className="w-1.5 h-1.5 bg-[#8B0000] rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                    <div className="w-1.5 h-1.5 bg-[#8B0000] rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                    <div className="w-1.5 h-1.5 bg-[#8B0000] rounded-full animate-bounce"></div>
-                  </div>
-                </div>
+      {/* ── Message area ── */}
+      <div className="flex-1 overflow-y-auto px-4 py-8">
+        {!hasMessages ? (
+          // Empty state — centered heading
+          <div className="flex flex-col items-center justify-center h-full">
+            <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">
+              Speak with Alucard
+            </h1>
+            <p className="text-neutral-500 text-sm">
+              Franz Kafka — Prague, 1922
+            </p>
+          </div>
+        ) : (
+          // Message list
+          <div className="max-w-3xl mx-auto space-y-6">
+            {state.messages.map((msg) => (
+              <MessageBubble key={msg.id} message={msg} />
+            ))}
+
+            {/* Typing indicator */}
+            {state.isLoading && (
+              <div className="flex items-center gap-2 text-neutral-500 text-sm">
+                <span className="w-2 h-2 bg-[#8B0000] rounded-full animate-bounce [animation-delay:0ms]" />
+                <span className="w-2 h-2 bg-[#8B0000] rounded-full animate-bounce [animation-delay:150ms]" />
+                <span className="w-2 h-2 bg-[#8B0000] rounded-full animate-bounce [animation-delay:300ms]" />
               </div>
-            </div>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
+            )}
+            <div ref={bottomRef} />
+          </div>
+        )}
       </div>
 
-      {/* Input Area */}
-      <div className="sticky bottom-0 p-4 sm:p-6 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a] to-transparent pt-8">
-        <div className="relative flex items-center max-w-3xl mx-auto">
-          <input
-            ref={inputRef}
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={state.isLoading}
-            placeholder={state.isLoading ? "Waiting for Alucard..." : "Speak to him..."}
-            className="w-full bg-[#111111] border border-[#1f1f1f] focus:border-[#8B0000]/50 text-gray-100 placeholder-gray-600 rounded-full py-4 pl-6 pr-16 shadow-lg outline-none transition-colors disabled:opacity-50"
-            aria-label="Chat input"
-          />
-          <button
-            onClick={handleSend}
-            disabled={!inputValue.trim() || state.isLoading}
-            aria-label="Send message"
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 bg-[#8B0000] hover:bg-red-800 disabled:bg-gray-800 disabled:text-gray-500 text-white rounded-full transition-colors"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 ml-0.5">
-              <path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" />
-            </svg>
-          </button>
+      {/* ── Input box (v0-style, pinned to bottom) ── */}
+      <div className="px-4 pb-6 pt-2">
+        <div className="max-w-3xl mx-auto">
+          {/* Heading shown above input only when no messages yet */}
+          {!hasMessages && (
+            <div />  // heading is in the empty state above
+          )}
+
+          <div className="relative bg-neutral-900 rounded-xl border border-neutral-800">
+            <div className="overflow-y-auto">
+              <Textarea
+                ref={textareaRef}
+                value={input}
+                onChange={(e) => {
+                  setInput(e.target.value);
+                  adjustHeight();
+                }}
+                onKeyDown={handleKeyDown}
+                placeholder="Write to Kafka..."
+                className={cn(
+                  "w-full px-4 py-3",
+                  "resize-none",
+                  "bg-transparent",
+                  "border-none",
+                  "text-white text-sm",
+                  "focus:outline-none",
+                  "focus-visible:ring-0 focus-visible:ring-offset-0",
+                  "placeholder:text-neutral-500 placeholder:text-sm",
+                  "min-h-[60px]"
+                )}
+                style={{ overflow: "hidden" }}
+              />
+            </div>
+
+            {/* Bottom bar — send button only, no extra buttons */}
+            <div className="flex items-center justify-end p-3">
+              <button
+                type="button"
+                onClick={handleSend}
+                disabled={!input.trim() || state.isLoading}
+                className={cn(
+                  "px-1.5 py-1.5 rounded-lg text-sm transition-colors border flex items-center gap-1",
+                  input.trim() && !state.isLoading
+                    ? "bg-[#8B0000] border-[#8B0000] text-white hover:bg-[#a00000]"
+                    : "border-zinc-700 text-zinc-600 cursor-not-allowed"
+                )}
+              >
+                <ArrowUpIcon className="w-4 h-4" />
+                <span className="sr-only">Send</span>
+              </button>
+            </div>
+          </div>
+
+          <p className="text-center text-neutral-700 text-xs mt-3">
+            Alucard may make errors — always verify with primary sources.
+          </p>
         </div>
       </div>
     </div>
