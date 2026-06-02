@@ -58,7 +58,14 @@ async def embed_texts(
     batch_size = 20
     all_embeddings: list[list[float]] = []
 
+    MAX_CHUNKS_PER_RUN = 800  # Leave 200 requests as buffer for chat queries
+    chunks_embedded = 0
+
     for batch_start in range(0, len(texts), batch_size):
+        if chunks_embedded >= MAX_CHUNKS_PER_RUN:
+            print(f"[SAFETY STOP] Reached {MAX_CHUNKS_PER_RUN} chunk limit. Run again tomorrow for remaining files.")
+            break
+
         batch = texts[batch_start : batch_start + batch_size]
         batch_embeddings = await _embed_batch_with_retry(
             batch,
@@ -68,8 +75,10 @@ async def embed_texts(
         )
         all_embeddings.extend(batch_embeddings)
         
+        chunks_embedded += len(batch)
+        
         # Rate limit protection for free tier
-        await asyncio.sleep(2.0)
+        await asyncio.sleep(5.0)
 
     logger.info(
         "embedding_complete",

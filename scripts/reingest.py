@@ -23,26 +23,42 @@ from app.vector_store import delete_collection
 async def main() -> None:
     parser = argparse.ArgumentParser(description="Re-ingest knowledge base after deploy.")
     parser.add_argument(
-        "clone_id",
-        nargs="?",
+        "--clone_id",
         default="alucard",
         help="The clone ID to re-ingest (default: alucard)",
     )
+    parser.add_argument(
+        "--file",
+        default=None,
+        help="Specific file to ingest",
+    )
+    # Support positional argument for backwards compatibility
+    parser.add_argument(
+        "legacy_clone_id",
+        nargs="?",
+        default=None,
+        help=argparse.SUPPRESS,
+    )
     args = parser.parse_args()
 
-    clone_id = args.clone_id
-    print(f"Starting re-ingestion for clone: {clone_id}")
+    clone_id = args.legacy_clone_id or args.clone_id
+    file_name = args.file
+    
+    print(f"Starting re-ingestion for clone: {clone_id}" + (f", file: {file_name}" if file_name else ""))
 
-    # First delete existing collection if any
-    deleted = await delete_collection(clone_id)
-    if deleted:
-        print(f"Cleared existing collection for {clone_id}.")
+    # First delete existing collection if any (only if we are re-ingesting EVERYTHING)
+    if not file_name:
+        deleted = await delete_collection(clone_id)
+        if deleted:
+            print(f"Cleared existing collection for {clone_id}.")
+        else:
+            print(f"No existing collection found for {clone_id}.")
     else:
-        print(f"No existing collection found for {clone_id}.")
+        print(f"Skipping collection clearing because a specific file was provided.")
 
-    # Ingest all data
+    # Ingest data
     try:
-        stats = await ingest_clone_data(clone_id)
+        stats = await ingest_clone_data(clone_id, file_name=file_name)
         print(f"Successfully re-ingested {stats.chunks_created} chunks from {stats.files_processed} files for {clone_id}.")
     except Exception as e:
         print(f"Error during ingestion: {e}")

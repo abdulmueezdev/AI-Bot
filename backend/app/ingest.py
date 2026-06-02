@@ -44,7 +44,7 @@ class Chunk:
     chunk_id: str
 
 
-async def ingest_clone_data(clone_id: str, *, force: bool = False) -> IngestStats:
+async def ingest_clone_data(clone_id: str, *, force: bool = False, file_name: str | None = None) -> IngestStats:
     """Ingest all documents from a clone's data directory.
 
     Args:
@@ -69,6 +69,9 @@ async def ingest_clone_data(clone_id: str, *, force: bool = False) -> IngestStat
     data_files: list[Path] = list(data_dir.iterdir())
     if persona_path.exists():
         data_files.append(persona_path)
+
+    if file_name:
+        data_files = [f for f in data_files if f.name == file_name]
 
     if force:
         await delete_collection(clone_id)
