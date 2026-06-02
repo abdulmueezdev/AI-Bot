@@ -81,6 +81,7 @@ async def _call_groq(
     # Load overrides from config.yaml
     temperature = settings.llm_temperature
     max_tokens = settings.max_output_tokens
+    groq_model = settings.groq_model
     config_path = settings.get_clone_config_path(clone_id)
     if config_path.exists():
         try:
@@ -89,6 +90,8 @@ async def _call_groq(
                 temperature = float(config_data["temperature"])
             if "max_output_tokens" in config_data:
                 max_tokens = int(config_data["max_output_tokens"])
+            if "model" in config_data:
+                groq_model = str(config_data["model"])
         except Exception:
             pass
 
@@ -98,23 +101,24 @@ async def _call_groq(
     try:
         for attempt in range(settings.max_retries):
             try:
-                messages = [{"role": "system", "content": prompt.system_prompt.split("[CONVERSATION EXAMPLES]")[0].strip()}]
-                if "[CONVERSATION EXAMPLES]" in prompt.system_prompt:
-                    examples_text = prompt.system_prompt.split("[CONVERSATION EXAMPLES]")[1].strip()
-                    for block in examples_text.split("User: "):
-                        if not block.strip(): continue
-                        parts = block.split("Assistant: ")
-                        if len(parts) == 2:
-                            messages.append({"role": "user", "content": parts[0].strip()})
-                            messages.append({"role": "assistant", "content": parts[1].strip()})
-                messages.append({"role": "user", "content": prompt.user_prompt})
+                messages = [
+                    {"role": "system", "content": prompt.system_prompt.strip()},
+                    {"role": "user", "content": prompt.user_prompt}
+                ]
+
+                import json as _json
+                print("=== LLM PAYLOAD DEBUG ===")
+                print(_json.dumps(messages, indent=2, ensure_ascii=False)[:3000])
+                print("=========================")
 
                 start_time = time.monotonic()
                 response = await client.chat.completions.create(
-                    model=settings.groq_model,
+                    model=groq_model,
                     messages=messages,
                     max_tokens=max_tokens,
                     temperature=temperature,
+                    frequency_penalty=0.6,
+                    presence_penalty=0.4,
                 )
                 elapsed_ms = (time.monotonic() - start_time) * 1000
                 text = response.choices[0].message.content or ""
@@ -122,11 +126,11 @@ async def _call_groq(
 
                 logger.info(
                     "groq_success", clone_id=clone_id, session_id=session_id,
-                    model=settings.groq_model, tokens=tokens,
+                    model=groq_model, tokens=tokens,
                     latency_ms=round(elapsed_ms, 1), attempt=attempt + 1,
                 )
                 return LLMResponse(
-                    text=text, model_used=settings.groq_model, provider="groq",
+                    text=text, model_used=groq_model, provider="groq",
                     tokens_used=tokens, latency_ms=round(elapsed_ms, 1),
                 )
             except Exception as exc:

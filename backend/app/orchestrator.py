@@ -23,6 +23,42 @@ from app.vector_store import query as vector_query
 
 logger = structlog.get_logger(__name__)
 
+import re
+
+FORBIDDEN_WORDS = [
+    "abyss", "chasm", "threshold", "precipice", "void",
+    "weight of", "leap into", "uncertainty awaits", "darkness",
+    "the weight", "what lies beyond", "step forward into"
+]
+
+def _enforce_brevity(response: str, message: str) -> str:
+    """
+    Post-processing filter. Trims theatrical responses.
+    Enforces length rules based on input type.
+    """
+    # Detect greeting
+    greetings = {"hi", "hello", "hey", "greetings", "good morning", "good evening"}
+    is_greeting = message.strip().lower() in greetings
+
+    # Split into sentences
+    sentences = re.split(r'(?<=[.!?])\s+', response.strip())
+    sentences = [s for s in sentences if s.strip()]
+
+    # Hard truncate based on message type
+    if is_greeting:
+        sentences = sentences[:1]
+    else:
+        sentences = sentences[:4]
+
+    trimmed = " ".join(sentences)
+
+    # Flag forbidden theatrical words — log warning
+    for word in FORBIDDEN_WORDS:
+        if word.lower() in trimmed.lower():
+            print(f"[PERSONA WARNING] Forbidden word detected: '{word}' in response")
+
+    return trimmed
+
 
 class ChatResult:
     """Result of a chat interaction."""
@@ -154,13 +190,16 @@ async def handle_chat(
         clone_id=clone_id,
         session_id=session_id,
     )
+    
+    # Post-process response to enforce brevity
+    trimmed_response = _enforce_brevity(llm_response.text, cleaned_message)
 
     # Step 11: Store interaction in short-term memory
     await mm.store_interaction(
         clone_id=clone_id,
         session_id=session_id,
         user_message=cleaned_message,
-        assistant_response=llm_response.text,
+        assistant_response=trimmed_response,
     )
 
     # Step 12: Assemble result
@@ -178,7 +217,7 @@ async def handle_chat(
     )
 
     return ChatResult(
-        response=llm_response.text,
+        response=trimmed_response,
         clone_id=clone_id,
         session_id=session_id,
         model_used=llm_response.model_used,

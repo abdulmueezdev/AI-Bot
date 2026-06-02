@@ -45,3 +45,7 @@ htmlcov/
 
 # Logs
 *.log
+logs.zip
+runs.json
+backend/scratch*.py
+backend/check_count.py
