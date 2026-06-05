@@ -178,8 +178,10 @@ def _load_and_chunk_file(file_path: Path, clone_id: str) -> list[Chunk]:
 
     content = file_path.read_text(encoding="utf-8")
 
-    if suffix == ".md" or suffix == ".txt":
+    if suffix == ".md":
         return _chunk_markdown(content, file_path.name, clone_id)
+    elif suffix == ".txt":
+        return _chunk_plaintext(content, file_path.name, clone_id)
     elif suffix == ".csv":
         return _chunk_csv(content, file_path.name, clone_id)
     elif suffix == ".json":
@@ -251,6 +253,9 @@ def _chunk_markdown(content: str, filename: str, clone_id: str) -> list[Chunk]:
         else:
             # Split large sections on paragraph boundaries
             paragraphs = section.split("\n\n")
+            # If no paragraph breaks found, fall back to line-based splitting
+            if len(paragraphs) <= 1:
+                paragraphs = section.split("\n")
             current_chunk = ""
 
             for para_idx, para in enumerate(paragraphs):
@@ -366,6 +371,45 @@ def _chunk_json(content: str, filename: str, clone_id: str) -> list[Chunk]:
             chunk_id=chunk_id,
         ))
 
+    return chunks
+
+
+def _chunk_plaintext(content: str, filename: str, clone_id: str) -> list[Chunk]:
+    settings = get_settings()
+    chunks: list[Chunk] = []
+    # Normalize line endings, split on any double or single newline
+    paragraphs = [p.strip() for p in re.split(r"\n{2,}|\n", content) if p.strip()]
+    current_chunk = ""
+    chunk_index = 0
+    for para in paragraphs:
+        if len(current_chunk) + len(para) + 1 > settings.chunk_size and current_chunk:
+            chunk_id = _generate_chunk_id(clone_id, filename, chunk_index, 0)
+            chunks.append(Chunk(
+                text=current_chunk.strip(),
+                metadata={
+                    "clone_id": clone_id,
+                    "source_file": filename,
+                    "chunk_index": chunk_index,
+                    "section_index": chunk_index,
+                },
+                chunk_id=chunk_id,
+            ))
+            chunk_index += 1
+            current_chunk = para
+        else:
+            current_chunk = (current_chunk + " " + para).strip()
+    if current_chunk:
+        chunk_id = _generate_chunk_id(clone_id, filename, chunk_index, 0)
+        chunks.append(Chunk(
+            text=current_chunk.strip(),
+            metadata={
+                "clone_id": clone_id,
+                "source_file": filename,
+                "chunk_index": chunk_index,
+                "section_index": chunk_index,
+            },
+            chunk_id=chunk_id,
+        ))
     return chunks
 
 
