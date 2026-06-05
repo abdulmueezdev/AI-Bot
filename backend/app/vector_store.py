@@ -186,6 +186,30 @@ async def get_collection_count(clone_id: str) -> int:
         return 0
 
 
+async def get_file_chunk_count(clone_id: str, file_name: str) -> int:
+    """Get the number of documents for a specific file in a clone's collection.
+
+    Args:
+        clone_id: The clone identifier.
+        file_name: The source file name to check.
+
+    Returns:
+        Document count for the file, or 0 if no documents exist.
+    """
+    client = _get_client()
+    try:
+        response = (
+            client.table("documents")
+            .select("id", count="exact")  # type: ignore[arg-type]
+            .eq("clone_id", clone_id)
+            .eq("metadata->>source_file", file_name)
+            .execute()
+        )
+        return response.count or 0
+    except Exception:
+        return 0
+
+
 async def delete_collection(clone_id: str) -> bool:
     """Delete all documents for a clone (for re-ingestion).
 

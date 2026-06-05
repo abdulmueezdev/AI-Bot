@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import time
+from typing import AsyncGenerator
 
 from google import genai
 from google.genai import types
@@ -37,7 +38,7 @@ async def embed_texts(
     *,
     clone_id: str = "system",
     task_type: str = "RETRIEVAL_DOCUMENT",
-) -> list[list[float]]:
+) -> AsyncGenerator[list[list[float]], None]:
     """Embed a batch of texts using Gemini gemini-embedding-001.
 
     Args:
@@ -45,21 +46,22 @@ async def embed_texts(
         clone_id: Clone context for logging.
         task_type: RETRIEVAL_DOCUMENT for indexing, RETRIEVAL_QUERY for queries.
 
-    Returns:
-        List of embedding vectors (list of floats).
+    Yields:
+        List of embedding vectors (list of floats) for the batch.
 
     Raises:
         RuntimeError: If all retry attempts are exhausted.
     """
     if not texts:
-        return []
+        return
 
-    # Process in batches of 20 to avoid API limits
-    batch_size = 20
-    all_embeddings: list[list[float]] = []
+    # Process in batches of 5 to avoid free tier API limits (15 RPM)
+    batch_size = 5
 
     MAX_CHUNKS_PER_RUN = 800  # Leave 200 requests as buffer for chat queries
     chunks_embedded = 0
+    total_batches = (len(texts) + batch_size - 1) // batch_size
+    current_batch_count = 0
 
     for batch_start in range(0, len(texts), batch_size):
         if chunks_embedded >= MAX_CHUNKS_PER_RUN:
@@ -73,22 +75,23 @@ async def embed_texts(
             clone_id=clone_id,
             batch_index=batch_start // batch_size,
         )
-        all_embeddings.extend(batch_embeddings)
         
         chunks_embedded += len(batch)
+        current_batch_count += 1
         
-        # Rate limit protection for free tier
-        await asyncio.sleep(5.0)
+        yield batch_embeddings
+        
+        # Rate limit protection for free tier (15 RPM -> max 3 batches of 5 per min)
+        # Sleep for 25s between batches to ensure we never exceed 15 RPM in a rolling 60s window
+        if current_batch_count < total_batches and chunks_embedded < MAX_CHUNKS_PER_RUN:
+            await asyncio.sleep(25.0)
 
     logger.info(
         "embedding_complete",
         clone_id=clone_id,
         total_texts=len(texts),
-        total_embeddings=len(all_embeddings),
-        dimensions=len(all_embeddings[0]) if all_embeddings else 0,
+        total_embeddings=chunks_embedded,
     )
-
-    return all_embeddings
 
 
 async def embed_query(
@@ -105,12 +108,14 @@ async def embed_query(
     Returns:
         Embedding vector as a list of floats.
     """
-    results = await embed_texts(
+    async for results in embed_texts(
         [query],
         clone_id=clone_id,
         task_type="RETRIEVAL_QUERY",
-    )
-    return results[0]
+    ):
+        return results[0]
+    
+    raise RuntimeError("No embeddings returned for query.")
 
 
 async def _embed_batch_with_retry(

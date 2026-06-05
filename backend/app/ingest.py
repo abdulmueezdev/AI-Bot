@@ -19,7 +19,7 @@ import structlog
 
 from app.config import get_settings
 from app.embedder import embed_texts
-from app.vector_store import add_documents, delete_collection
+from app.vector_store import add_documents, delete_collection, get_file_chunk_count
 
 logger = structlog.get_logger(__name__)
 
@@ -86,14 +86,27 @@ async def ingest_clone_data(clone_id: str, *, force: bool = False, file_name: st
 
         try:
             chunks = _load_and_chunk_file(file_path, clone_id)
-            all_chunks.extend(chunks)
-            stats.files_processed += 1
-            logger.info(
-                "file_chunked",
-                clone_id=clone_id,
-                file=file_path.name,
-                chunks=len(chunks),
-            )
+            
+            # Check for existing chunks for resume functionality (unless force=True)
+            if not force:
+                existing_count = await get_file_chunk_count(clone_id, file_path.name)
+                if existing_count > 0:
+                    if existing_count >= len(chunks):
+                        logger.info("file_already_ingested", file=file_path.name, clone_id=clone_id, chunks=len(chunks))
+                        chunks = []
+                    else:
+                        logger.info("resuming_file", file=file_path.name, clone_id=clone_id, skip=existing_count, total=len(chunks))
+                        chunks = chunks[existing_count:]
+
+            if chunks:
+                all_chunks.extend(chunks)
+                stats.files_processed += 1
+                logger.info(
+                    "file_chunked",
+                    clone_id=clone_id,
+                    file=file_path.name,
+                    chunks=len(chunks),
+                )
         except Exception as exc:
             error_msg = f"Failed to process {file_path.name}: {exc}"
             stats.errors.append(error_msg)
@@ -108,27 +121,32 @@ async def ingest_clone_data(clone_id: str, *, force: bool = False, file_name: st
         stats.errors.append("No chunks generated from any file")
         return stats
 
-    # Embed all chunks in batch
+    # Embed all chunks in batches and stream to Supabase immediately
     chunk_texts = [c.text for c in all_chunks]
     logger.info("embedding_start", clone_id=clone_id, total_chunks=len(chunk_texts))
 
+    batch_start = 0
     try:
-        embeddings = await embed_texts(chunk_texts, clone_id=clone_id)
+        async for batch_embeddings in embed_texts(chunk_texts, clone_id=clone_id):
+            batch_size = len(batch_embeddings)
+            batch_chunks = all_chunks[batch_start : batch_start + batch_size]
+            batch_texts = chunk_texts[batch_start : batch_start + batch_size]
+            
+            # Store in vector DB immediately
+            await add_documents(
+                clone_id,
+                chunks=batch_texts,
+                embeddings=batch_embeddings,
+                metadatas=[c.metadata for c in batch_chunks],
+                ids=[c.chunk_id for c in batch_chunks],
+            )
+            
+            batch_start += batch_size
+            stats.chunks_created += batch_size
+            
     except RuntimeError as exc:
-        stats.errors.append(f"Embedding failed: {exc}")
+        stats.errors.append(f"Embedding failed at chunk {batch_start}: {exc}")
         logger.error("embedding_failed", clone_id=clone_id, error=str(exc))
-        return stats
-
-    # Store in vector DB
-    await add_documents(
-        clone_id,
-        chunks=chunk_texts,
-        embeddings=embeddings,
-        metadatas=[c.metadata for c in all_chunks],
-        ids=[c.chunk_id for c in all_chunks],
-    )
-
-    stats.chunks_created = len(all_chunks)
     stats.elapsed_ms = (time.monotonic() - start_time) * 1000
 
     logger.info(
