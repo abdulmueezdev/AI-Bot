@@ -316,6 +316,9 @@ def build_prompt(
         context_chunks_used = 0
 
         for result in retrieval_results:
+            if result.similarity < get_settings().similarity_threshold:
+                continue
+
             chunk_text = f"[Source: {result.metadata.get('source_file', 'unknown')}]\n{result.text}"
             chunk_tokens = count_tokens(chunk_text)
 
@@ -328,7 +331,7 @@ def build_prompt(
                     tokens_used=context_tokens_used,
                     budget=KNOWLEDGE_BUDGET,
                 )
-                break
+                continue
 
             context_parts.append(chunk_text)
             context_tokens_used += chunk_tokens

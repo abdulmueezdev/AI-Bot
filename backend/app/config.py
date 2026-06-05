@@ -57,7 +57,7 @@ class Settings(BaseSettings):
 
     # ── RAG Settings ───────────────────────────────────────────────────
     similarity_threshold: float = Field(
-        default=0.65,
+        default=0.55,
         description="Minimum cosine similarity for retrieval",
     )
     top_k_results: int = Field(default=5, description="Number of chunks to retrieve")
