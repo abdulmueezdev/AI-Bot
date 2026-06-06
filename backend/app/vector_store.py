@@ -233,3 +233,21 @@ async def delete_collection(clone_id: str) -> bool:
         return deleted
     except Exception:
         return False
+
+
+async def delete_file_chunks(clone_id: str, file_name: str) -> int:
+    client = _get_client()
+    try:
+        response = (
+            client.table("documents")
+            .delete()
+            .eq("clone_id", clone_id)
+            .eq("metadata->>source_file", file_name)
+            .execute()
+        )
+        deleted = len(response.data) if response.data else 0
+        logger.info("file_chunks_deleted", clone_id=clone_id, file=file_name, count=deleted)
+        return deleted
+    except Exception as exc:
+        logger.error("file_chunks_delete_failed", clone_id=clone_id, file=file_name, error=str(exc))
+        return 0

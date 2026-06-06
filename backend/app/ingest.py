@@ -19,7 +19,7 @@ import structlog
 
 from app.config import get_settings
 from app.embedder import embed_texts
-from app.vector_store import add_documents, delete_collection, get_file_chunk_count
+from app.vector_store import add_documents, delete_collection, delete_file_chunks, get_file_chunk_count
 
 logger = structlog.get_logger(__name__)
 
@@ -74,8 +74,10 @@ async def ingest_clone_data(clone_id: str, *, force: bool = False, file_name: st
         data_files = [f for f in data_files if f.name == file_name]
 
     if force:
-        await delete_collection(clone_id)
-        logger.info("collection_cleared_for_reingest", clone_id=clone_id)
+        if file_name:
+            await delete_file_chunks(clone_id, file_name)
+        else:
+            await delete_collection(clone_id)
 
     # Process each file
     all_chunks: list[Chunk] = []
