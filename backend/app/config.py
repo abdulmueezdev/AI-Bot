@@ -61,7 +61,7 @@ class Settings(BaseSettings):
         description="Minimum cosine similarity for retrieval",
     )
     top_k_results: int = Field(default=5, description="Number of chunks to retrieve")
-    chunk_size: int = Field(default=512, description="Target chunk size in characters")
+    chunk_size: int = Field(default=1024, description="Target chunk size in characters")
     chunk_overlap: int = Field(default=64, description="Overlap between chunks in characters")
 
     # ── LLM Generation ─────────────────────────────────────────────────
