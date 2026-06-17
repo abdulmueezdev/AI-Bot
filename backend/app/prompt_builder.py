@@ -34,7 +34,7 @@ logger = structlog.get_logger(__name__)
 # ── Token Budget Constants ─────────────────────────────────────────────
 
 TOTAL_BUDGET: int = 3600
-IDENTITY_BUDGET: int = 600
+IDENTITY_BUDGET: int = 800
 FEW_SHOT_BUDGET: int = 800
 CALENDAR_BUDGET: int = 300
 ENTITY_BUDGET: int = 200
