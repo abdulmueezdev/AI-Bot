@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import time
 import uuid
+import re
 
 import structlog
 
@@ -20,8 +21,6 @@ from app.calendar_sync import get_calendar_sync
 from app.prompt_builder import build_prompt, detect_calendar_query
 from app.safety import sanitize_input, validate_clone_id
 from app.vector_store import query as vector_query
-
-import re
 
 logger = structlog.get_logger(__name__)
 
