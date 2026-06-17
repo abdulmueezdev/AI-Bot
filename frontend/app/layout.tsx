@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { EB_Garamond } from "next/font/google";
+import { Playfair_Display } from "next/font/google";
 import "./globals.css";
 
-const garamond = EB_Garamond({
+const playfair = Playfair_Display({
   subsets: ["latin"],
-  variable: "--font-garamond",
+  variable: "--font-playfair",
 });
 
 export const metadata: Metadata = {
@@ -18,8 +18,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={garamond.variable}>
-      <body className="bg-[#0a0a0a] antialiased font-[family-name:var(--font-garamond)]">
+    <html lang="en" className={`dark ${playfair.variable}`}>
+      <body>
+        <div className="watermark">K.</div>
         {children}
       </body>
     </html>
