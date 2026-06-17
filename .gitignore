@@ -66,3 +66,13 @@ runs.json
 backend_server.log
 test_venv/
 .venv_test/
+
+# Internal planning docs — not for public repo
+AI_RULES.docx
+ARCHITECTURE.docx
+PRD.docx
+PLAN.docx
+MASTER_STRUCTURE.docx
+CHANGELOG.md
+Clone1_PersonaDocument.md
+Other handout/
