@@ -49,3 +49,20 @@ logs.zip
 runs.json
 backend/scratch*.py
 backend/check_count.py
+
+# Debug/scratch scripts
+fix_patch.py
+patch.py
+patch_llm.py
+probe.py
+extract_pdfs.py
+freeze.txt
+backend/test_*.py
+!backend/tests/
+
+# Stray artifacts
+*.zip
+runs.json
+backend_server.log
+test_venv/
+.venv_test/
