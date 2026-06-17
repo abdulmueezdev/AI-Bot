@@ -21,9 +21,9 @@ from app.prompt_builder import build_prompt, detect_calendar_query
 from app.safety import sanitize_input, validate_clone_id
 from app.vector_store import query as vector_query
 
-logger = structlog.get_logger(__name__)
-
 import re
+
+logger = structlog.get_logger(__name__)
 
 FORBIDDEN_WORDS = [
     "abyss", "chasm", "threshold", "precipice", "void",
