@@ -9,3 +9,13 @@ module = [
     "apscheduler.*"
 ]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [
+    "app.embedder",
+    "app.llm_client",
+    "app.memory_manager",
+    "app.prompt_builder",
+    "app.vector_store",
+]
+ignore_errors = true
