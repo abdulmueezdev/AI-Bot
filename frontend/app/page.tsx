@@ -92,12 +92,12 @@ export default function Home() {
       
       {/* CHAT AREA */}
       <main className="flex-1 overflow-y-auto w-full flex flex-col relative z-10 px-8">
-        <div className="w-full flex flex-col space-y-24 min-h-full pb-64 pt-24 max-w-5xl mx-auto">
+        <div className="w-full flex flex-col min-h-full pb-12 pt-12 max-w-5xl mx-auto">
           
           {!hasMessages && <EmptyState />}
           
           {/* Chat Content Container */}
-          <div className="flex flex-col space-y-32 z-10 w-full relative">
+          <div className="flex flex-col space-y-8 z-10 w-full relative">
             {state.messages.map((msg) => (
               <ChatMessage key={msg.id} message={msg} />
             ))}
