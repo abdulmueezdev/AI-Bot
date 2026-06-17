@@ -136,12 +136,15 @@ app = FastAPI(
 # CORS — specific allowed origins for production frontend
 allowed_origins = [
     "http://localhost:3000",           # local dev
+    "http://localhost:3001",           # alternate local dev
+    "https://ai-bot-psi-three.vercel.app",  # Production Vercel URL
     os.getenv("FRONTEND_URL", ""),     # Vercel URL via env var
 ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
+    allow_origin_regex=r"https://ai-bot-.*\.vercel\.app",  # Vercel preview URLs
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
