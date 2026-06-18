@@ -45,7 +45,10 @@ class TestEmbedder:
         mock_get_client.return_value = mock_instance
 
         texts = ["Text 1", "Text 2"]
-        results = await embed_texts(texts, clone_id="alucard")
+        results: list[list[float]] = []
+        async for batch in embed_texts(texts, clone_id="alucard"):
+            results.extend(batch)
+
         assert len(results) == 2
         assert len(results[0]) == 768
         assert len(results[1]) == 768

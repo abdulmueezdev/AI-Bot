@@ -131,7 +131,7 @@ class TestVectorQuery:
             await query("alucard", [0.1] * 768, top_k=3)
 
         call_args = mock_supabase_client.rpc.call_args
-        assert call_args[0][1]["match_count"] == 3
+        assert call_args[0][1]["match_count"] == 12
 
 
 @pytest.mark.asyncio

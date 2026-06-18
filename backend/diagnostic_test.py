@@ -1,3 +1,5 @@
+__test__ = False
+
 import asyncio
 import sys
 # Set up paths so we can import app modules properly
