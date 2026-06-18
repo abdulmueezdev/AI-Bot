@@ -193,3 +193,70 @@ class TestBuildPrompt:
         assert isinstance(result.system_prompt, str)
         assert isinstance(result.user_prompt, str)
         assert isinstance(result.total_tokens, int)
+
+    @patch("app.prompt_builder._load_persona")
+    def test_calendar_block_injected(
+        self,
+        mock_load: Any,
+        mock_retrieval_results: list[RetrievalResult],
+    ) -> None:
+        mock_load.return_value = PersonaConfig(system_prompt="You are Alucard.", examples="")
+        result = build_prompt(
+            "alucard",
+            "What is my schedule?",
+            mock_retrieval_results,
+            calendar_context="Meeting at 5pm",
+            inject_calendar=True,
+        )
+        assert "[SCHEDULE]" in result.user_prompt
+        assert "Meeting at 5pm" in result.user_prompt
+
+    @patch("app.prompt_builder._load_persona")
+    def test_history_block_injected(
+        self,
+        mock_load: Any,
+        mock_retrieval_results: list[RetrievalResult],
+    ) -> None:
+        mock_load.return_value = PersonaConfig(system_prompt="You are Alucard.", examples="")
+        history = [{"role": "user", "content": "Hello before"}]
+        result = build_prompt(
+            "alucard",
+            "What now?",
+            mock_retrieval_results,
+            history=history,
+        )
+        assert "[CONVERSATION HISTORY]" in result.user_prompt
+        assert "Hello before" in result.user_prompt
+
+    @patch("app.prompt_builder._load_persona")
+    def test_memory_block_injected(
+        self,
+        mock_load: Any,
+        mock_retrieval_results: list[RetrievalResult],
+    ) -> None:
+        mock_load.return_value = PersonaConfig(system_prompt="You are Alucard.", examples="")
+        result = build_prompt(
+            "alucard",
+            "Who am I?",
+            mock_retrieval_results,
+            episodic_summaries=["You are my friend"],
+        )
+        assert "[PAST CONVERSATION MEMORIES]" in result.user_prompt
+        assert "You are my friend" in result.user_prompt
+
+    @patch("app.prompt_builder._load_persona")
+    def test_entity_block_injected(
+        self,
+        mock_load: Any,
+        mock_retrieval_results: list[RetrievalResult],
+    ) -> None:
+        mock_load.return_value = PersonaConfig(system_prompt="You are Alucard.", examples="")
+        result = build_prompt(
+            "alucard",
+            "Who is that?",
+            mock_retrieval_results,
+            entity_context=[{"entity_type": "person", "entity_name": "Bob", "context": "friend"}],
+        )
+        assert "[KNOWN ENTITIES]" in result.user_prompt
+        assert "Bob" in result.user_prompt
+

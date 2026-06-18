@@ -48,7 +48,6 @@ class TestEmbedder:
         results: list[list[float]] = []
         async for batch in embed_texts(texts, clone_id="alucard"):
             results.extend(batch)
-
         assert len(results) == 2
         assert len(results[0]) == 768
         assert len(results[1]) == 768
