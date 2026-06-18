@@ -14,7 +14,7 @@ from typing import Any
 from unittest.mock import patch
 
 
-from app.prompt_builder import build_prompt, count_tokens, PromptResult
+from app.prompt_builder import PersonaConfig, PromptResult, build_prompt, count_tokens
 from app.vector_store import RetrievalResult
 
 
@@ -47,7 +47,10 @@ class TestBuildPrompt:
         mock_retrieval_results: list[RetrievalResult],
     ) -> None:
         """Total assembled prompt must never exceed the token budget (3584 default)."""
-        mock_load.return_value = "You are Alucard. A dark philosopher."
+        mock_load.return_value = PersonaConfig(
+            system_prompt="You are Alucard. A dark philosopher.",
+            examples="",
+        )
 
         result = build_prompt(
             "alucard",
@@ -64,7 +67,10 @@ class TestBuildPrompt:
         mock_retrieval_results: list[RetrievalResult],
     ) -> None:
         """System prompt must always contain the persona identity text."""
-        mock_load.return_value = "You are Alucard. A dark philosopher."
+        mock_load.return_value = PersonaConfig(
+            system_prompt="You are Alucard. A dark philosopher.",
+            examples="",
+        )
 
         result = build_prompt(
             "alucard",
@@ -82,7 +88,7 @@ class TestBuildPrompt:
         mock_low_similarity_results: list[RetrievalResult],
     ) -> None:
         """When below_threshold=True, fallback context should be used."""
-        mock_load.return_value = "You are Alucard."
+        mock_load.return_value = PersonaConfig(system_prompt="You are Alucard.", examples="")
 
         result = build_prompt(
             "alucard",
@@ -100,7 +106,7 @@ class TestBuildPrompt:
         mock_load: Any,
     ) -> None:
         """When retrieval_results is empty, fallback context should be used."""
-        mock_load.return_value = "You are Alucard."
+        mock_load.return_value = PersonaConfig(system_prompt="You are Alucard.", examples="")
 
         result = build_prompt(
             "alucard",
@@ -118,7 +124,7 @@ class TestBuildPrompt:
         mock_retrieval_results: list[RetrievalResult],
     ) -> None:
         """context_chunks_used should match the number of chunks actually included."""
-        mock_load.return_value = "You are Alucard."
+        mock_load.return_value = PersonaConfig(system_prompt="You are Alucard.", examples="")
 
         result = build_prompt(
             "alucard",
@@ -135,7 +141,10 @@ class TestBuildPrompt:
         mock_load: Any,
     ) -> None:
         """When context is too large, chunks should be dropped (not persona)."""
-        mock_load.return_value = "You are Alucard. A dark philosopher."
+        mock_load.return_value = PersonaConfig(
+            system_prompt="You are Alucard. A dark philosopher.",
+            examples="",
+        )
 
         # Create many large chunks to blow the budget
         huge_chunks = [
@@ -163,7 +172,7 @@ class TestBuildPrompt:
         mock_retrieval_results: list[RetrievalResult],
     ) -> None:
         """The user's query must always appear in the assembled prompt."""
-        mock_load.return_value = "You are Alucard."
+        mock_load.return_value = PersonaConfig(system_prompt="You are Alucard.", examples="")
         query_text = "What is your greatest fear?"
 
         result = build_prompt("alucard", query_text, mock_retrieval_results)
@@ -176,7 +185,7 @@ class TestBuildPrompt:
         mock_load: Any,
     ) -> None:
         """build_prompt should return a PromptResult dataclass."""
-        mock_load.return_value = "You are Alucard."
+        mock_load.return_value = PersonaConfig(system_prompt="You are Alucard.", examples="")
 
         result = build_prompt("alucard", "Hello", [])
 
