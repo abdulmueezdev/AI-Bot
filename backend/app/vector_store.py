@@ -117,10 +117,13 @@ async def query(
         List of RetrievalResult sorted by descending similarity.
         Empty list if no matching documents exist.
     """
+    import random
     settings = get_settings()
     if top_k is None:
         top_k = settings.top_k_results
 
+    # Over-fetch for diversity sampling
+    fetch_k = top_k * 4
     client = _get_client()
 
     try:
@@ -128,7 +131,7 @@ async def query(
             "match_documents",
             {
                 "query_embedding": json.dumps(query_embedding),
-                "match_count": top_k,
+                "match_count": fetch_k,
                 "filter_clone_id": clone_id,
             },
         ).execute()
@@ -154,14 +157,39 @@ async def query(
     # Sort by descending similarity (RPC already does this, but be safe)
     results.sort(key=lambda r: r.similarity, reverse=True)
 
+    # Deduplicate exact text
+    seen_texts = set()
+    deduped_results = []
+    for r in results:
+        if r.text not in seen_texts:
+            seen_texts.add(r.text)
+            deduped_results.append(r)
+
+    # Filter by threshold BEFORE sampling so we don't throw away good chunks
+    filtered_results = [r for r in deduped_results if r.similarity >= settings.similarity_threshold]
+
+    if len(filtered_results) <= top_k:
+        final_results = filtered_results
+    else:
+        # Keep the absolute top 1 to guarantee highest relevance, sample the rest
+        guaranteed = filtered_results[:1]
+        pool = filtered_results[1:]
+        sampled = random.sample(pool, top_k - 1)
+        final_results = guaranteed + sampled
+
+        # Re-sort descending
+        final_results.sort(key=lambda r: r.similarity, reverse=True)
+
     logger.info(
         "vector_query_complete",
         clone_id=clone_id,
-        results_count=len(results),
-        top_similarity=results[0].similarity if results else 0.0,
+        fetched=len(results),
+        filtered=len(filtered_results),
+        final_count=len(final_results),
+        top_similarity=final_results[0].similarity if final_results else 0.0,
     )
 
-    return results
+    return final_results
 
 
 async def get_collection_count(clone_id: str) -> int:
