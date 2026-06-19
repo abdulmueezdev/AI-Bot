@@ -37,7 +37,7 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 60vh;
+    font-size: clamp(200px, 60vh, 800px);
     font-family: var(--font-playfair), serif;
     font-weight: 900;
     color: #fff5e6;

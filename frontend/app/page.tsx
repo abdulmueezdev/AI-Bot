@@ -87,30 +87,30 @@ export default function Home() {
   const hasMessages = state.messages.length > 0;
 
   return (
-    <>
+    <div className="flex flex-col h-screen w-full overflow-hidden">
       <ChatHeader />
       
       {/* CHAT AREA */}
-      <main className="flex-1 overflow-y-auto w-full flex flex-col relative z-10 px-8">
-        <div className="w-full flex flex-col min-h-full pb-12 pt-12 max-w-5xl mx-auto">
+      <main className="flex-1 overflow-y-auto w-full flex flex-col relative z-10 px-4 md:px-8">
+        <div className="w-full flex flex-col min-h-full pb-32 pt-4 md:pt-12 max-w-5xl mx-auto">
           
           {!hasMessages && <EmptyState />}
           
           {/* Chat Content Container */}
-          <div className="flex flex-col space-y-8 z-10 w-full relative">
+          <div className="flex flex-col space-y-6 md:space-y-8 z-10 w-full relative">
             {state.messages.map((msg) => (
               <ChatMessage key={msg.id} message={msg} />
             ))}
 
             {/* Typing Indicator (Kafka) */}
             {state.isLoading && (
-              <div className="flex items-start w-3/4 mr-auto relative ml-24 opacity-80">
-                <div className="font-headline-lg font-black text-7xl text-brutal-text leading-none break-words z-10 relative">
-                  <span className="blinking-cursor text-error">█</span>
+              <div className="flex items-start w-[85%] md:w-3/4 mr-auto relative ml-12 md:ml-24 opacity-80 mt-2 md:mt-4">
+                <div className="font-headline-lg font-black text-4xl md:text-7xl text-brutal-text leading-none break-words z-10 relative">
+                  <span className="blinking-cursor">▌</span>
                 </div>
               </div>
             )}
-            <div ref={bottomRef} />
+            <div ref={bottomRef} className="h-4" />
           </div>
         </div>
       </main>
@@ -121,6 +121,6 @@ export default function Home() {
         handleSend={handleSend} 
         isLoading={state.isLoading} 
       />
-    </>
+    </div>
   );
 }
