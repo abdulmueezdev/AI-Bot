@@ -14,7 +14,7 @@ Alucard is a RAG-powered AI persona chatbot embodying Franz Kafka, built on free
 9. [License & Credits](#license--credits)
 
 ## Live Demo
-- **Frontend URL:** https://ai-bot-psi-three.vercel.app?_vercel_share=Yjy35iK3DEXxpARnbllJmtVApuS0DFI4(Wait as the Backend starts)
+- **Frontend URL:** https://ai-bot-psi-three.vercel.app?_vercel_share=Yjy35iK3DEXxpARnbllJmtVApuS0DFI4 (Wait as the Backend starts)
 - **Backend URL:** https://ai-bot-tp8d.onrender.com (Render)
 
 ## Architecture
