@@ -46,6 +46,15 @@ export default function Home() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [state.messages, state.isLoading]);
 
+  // Keep-alive ping to prevent Render instance from spinning down
+  useEffect(() => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://ai-bot-tp8d.onrender.com";
+    const ping = () => fetch(`${apiUrl}/health`).catch(() => {});
+    ping(); // ping on load to wake it up immediately
+    const interval = setInterval(ping, 10 * 60 * 1000); // every 10 minutes
+    return () => clearInterval(interval);
+  }, []);
+
   const handleSend = async () => {
     const text = input.trim();
     if (!text || state.isLoading) return;
@@ -70,15 +79,47 @@ export default function Home() {
           content: reply.response,
         },
       });
-    } catch {
-      dispatch({
-        type: "ADD_MESSAGE",
-        message: {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          content: "THE SYSTEM IS UNRESPONSIVE.",
-        },
-      });
+    } catch (error: any) {
+      if (error.name === "AbortError") {
+        dispatch({
+          type: "ADD_MESSAGE",
+          message: {
+            id: crypto.randomUUID(),
+            role: "assistant",
+            content: "Waking up the system, please wait...",
+          },
+        });
+
+        try {
+          const retryReply = await sendMessage(text);
+          dispatch({
+            type: "ADD_MESSAGE",
+            message: {
+              id: crypto.randomUUID(),
+              role: "assistant",
+              content: retryReply.response,
+            },
+          });
+        } catch (retryError) {
+          dispatch({
+            type: "ADD_MESSAGE",
+            message: {
+              id: crypto.randomUUID(),
+              role: "assistant",
+              content: "THE SYSTEM IS UNRESPONSIVE.",
+            },
+          });
+        }
+      } else {
+        dispatch({
+          type: "ADD_MESSAGE",
+          message: {
+            id: crypto.randomUUID(),
+            role: "assistant",
+            content: "THE SYSTEM IS UNRESPONSIVE.",
+          },
+        });
+      }
     } finally {
       dispatch({ type: "SET_LOADING", loading: false });
     }

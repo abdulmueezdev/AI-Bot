@@ -23,7 +23,7 @@ export const sendMessage = async (message: string): Promise<ApiResponse> => {
   const sessionId = getSessionId();
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000);
+  const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 seconds
 
   try {
     const res = await fetch(`${apiUrl}/chat/alucard`, {
@@ -42,9 +42,12 @@ export const sendMessage = async (message: string): Promise<ApiResponse> => {
     }
 
     return await res.json();
-  } catch (error) {
+  } catch (error: any) {
     clearTimeout(timeoutId);
     console.error("Chat API Error:", error);
-    throw new Error("Alucard is unavailable. Try again shortly.");
+    if (error.name === "AbortError") {
+      throw error;
+    }
+    throw new Error("THE SYSTEM IS UNRESPONSIVE.");
   }
 };

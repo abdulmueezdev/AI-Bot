@@ -138,6 +138,7 @@ allowed_origins = [
     "http://localhost:3000",           # local dev
     "http://localhost:3001",           # alternate local dev
     "https://ai-bot-psi-three.vercel.app",  # Production Vercel URL
+    "https://ai-6cje4v351-abdulmueezs-projects-99b2e67f.vercel.app",
     os.getenv("FRONTEND_URL", ""),     # Vercel URL via env var
 ]
 
