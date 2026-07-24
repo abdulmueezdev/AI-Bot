@@ -1,129 +1,51 @@
-# Alucard — Digital Clone AI Bot
+# Alucard — Franz Kafka Digital Clone
 
-Alucard is a RAG-powered AI persona chatbot embodying Franz Kafka, built on free-tier infrastructure.
-
-## Table of Contents
-1. [Live Demo](#live-demo)
-2. [Architecture](#architecture)
-3. [Tech Stack](#tech-stack)
-4. [Database & RAG Pipeline](#database--rag-pipeline)
-5. [Local Development](#local-development)
-6. [Deployment](#deployment)
-7. [Persona System](#persona-system)
-8. [Project Status](#project-status)
-9. [License & Credits](#license--credits)
+A conversational AI system that embodies Franz Kafka's voice, 
+drawing from his personal letters, diaries, and published works.
 
 ## Live Demo
-- **Frontend URL:** https://ai-bot-psi-three.vercel.app?_vercel_share=Yjy35iK3DEXxpARnbllJmtVApuS0DFI4 (Wait as the Backend starts)
-- **Backend URL:** https://ai-bot-tp8d.onrender.com (Render)
-
-## Architecture
-The system uses a modern decoupled architecture where a Next.js frontend communicates with a FastAPI backend. The backend manages the conversation state, retrieves relevant Kafka text snippets from Supabase via pgvector, formats the prompt under strict limits, and routes inference to the Groq LLM API.
-
-```ascii
- [ User Browser ] 
-        |
- (Next.js Frontend)
-        |
-        v
- [ FastAPI Backend ] <---> [ Supabase pgvector ] (RAG Context)
-        |
-        v
-  [ Groq API ] (LLM Inference)
-```
+https://ai-738trgzg9-abdulmueezs-projects-99b2e67f.vercel.app
 
 ## Tech Stack
-| Component | Technology | Purpose |
-| --- | --- | --- |
-| **Frontend Framework** | Next.js 14 | UI and client-side routing |
-| **Frontend Host** | Vercel | Global CDN & serverless hosting |
-| **Backend Framework** | FastAPI | Core logic, prompt assembly, and API endpoints |
-| **Backend Host** | Render | Free-tier backend hosting |
-| **Vector Store** | Supabase pgvector | Persistent vector database for RAG |
-| **Embeddings** | Gemini (`text-embedding-004`) | Generating vector embeddings for text chunks |
-| **LLM Inference** | Groq (`meta-llama/llama-4-scout-17b-16e-instruct`) | Fast text generation and persona adherence |
+- **LLM:** Groq (Llama 4 Scout)
+- **Embeddings:** Google Gemini text-embedding-004
+- **Vector DB:** Supabase pgvector
+- **Backend:** FastAPI deployed on Render
+- **Frontend:** Next.js 14 deployed on Vercel
+- **Memory:** 3-tier system (short-term, episodic ChromaDB, entity JSON)
 
-## Database & RAG Pipeline
-
-### Supabase Setup
-The RAG pipeline relies on a `documents` table in Supabase. It features an embedding column (sized to match `text-embedding-004` dimensions) and utilizes the pgvector extension to perform cosine similarity searches when the user queries the bot.
-
-### Ingestion & Chunking
-The `backend/app/ingest.py` script powers the ingestion pipeline:
-- **`_chunk_plaintext`**: Recursively splits plain `.txt` files based on character counts while maintaining semantic boundaries and overlapping text.
-- **`_chunk_markdown`**: Uses markdown headers (`##` and `###`) to preserve logical semantic groupings for structured documents.
-
-### Corpus Composition
-The current corpus consists of ~4,172 chunks derived from 7 distinct Kafka source texts:
-1. `Daires_of_franz_kafka_1910-1913.txt`
-2. `Franz_kafka_letter_to_felica.txt`
-3. `Letter_to_my_father.txt`
-4. `The_Metamorphosis.txt`
-5. `The_trail.txt`
-6. `complete_short_stories.txt`
-7. `frans_kafka_milenaya_mektublar-eng.txt`
-
-### Running an Ingestion Job
-To run an ingestion job locally:
-```bash
-cd backend
-source .venv/bin/activate
-python3 -c "
-from app.ingest import ingest_clone_data
-import asyncio
-async def run():
-    stats = await ingest_clone_data('alucard', file_name='YOUR_FILE.txt')
-    print(f'Done. Created: {stats.chunks_created}, Errors: {stats.errors}')
-asyncio.run(run())
-"
-```
-
-### Rate Limits
-The Gemini free tier enforces a rate limit of ~1,000 embedding requests per day (rolling 24-hour window). To accommodate this, the pipeline groups documents into resumable batches and employs a safety stop at 800 chunks per run to avoid throttling.
+## Architecture
+The system employs a sophisticated Retrieval-Augmented Generation (RAG) pipeline to ensure the persona accurately reflects Franz Kafka's unique voice and perspectives. When a user sends a message, the system embeds the query using Gemini `text-embedding-004` and queries a Supabase `pgvector` database containing Kafka's works. The retrieved context is combined with a dynamic 3-tier memory system—managing short-term conversation history, episodic memories via ChromaDB, and persistent entity relationships via JSON—before being processed by the Groq Llama 4 Scout LLM to generate a character-accurate response.
 
 ## Local Development
+To run this project locally, follow these steps:
 
-1. **Clone the repository:**
-   ```bash
-   git clone git@github.com:abdulmueezdev/AI-Bot.git
-   cd "AI Bot"
-   ```
-
-2. **Environment Variables:**
-   Create a `.env` file based on `.env.example`. Required keys:
-   - `GROQ_API_KEY`
-   - `GEMINI_API_KEY`
-   - `SUPABASE_URL`
-   - `SUPABASE_KEY`
-
-3. **Backend Setup:**
+1. Clone the repository.
+2. Setup the backend:
    ```bash
    cd backend
+   python -m venv .venv
+   source .venv/bin/activate
    pip install -r requirements.txt
    uvicorn app.main:app --reload
    ```
-
-4. **Frontend Setup:**
+3. Setup the frontend:
    ```bash
    cd frontend
    npm install
    npm run dev
    ```
+4. Ensure you have the necessary environment variables configured for Supabase, Groq, and Google Gemini in your `.env` files.
 
-## Deployment
-- **Backend:** Hosted on Render. The service auto-deploys via GitHub integration whenever code is pushed to the `main` branch.
-- **Frontend:** Hosted on Vercel. Similarly auto-deploys on `main` branch pushes.
+## Corpus
+Kafka's works used as knowledge base:
+- Letter to His Father
+- The Metamorphosis  
+- The Trial
+- Letters to Milena
+- Diaries 1910–1913
+- Complete Short Stories
+- Letters to Felice
 
-## Persona System
-Kafka's distinct, brooding personality is defined centrally in `backend/clones/alucard/config.yaml`.
-- **Rules:** The system dictates precise constraints, including length limits (maximum 50 words per response), voice rules (short, precise, non-poetic), forbidden words, identity facts (tuberculosis, 1922 Prague setting), and an explicit engagement rule requiring acknowledgment of user input before pivoting.
-- **Identity Budget:** Controlled in `backend/app/prompt_builder.py`, `IDENTITY_BUDGET` ensures that up to 800 tokens of the system prompt are guaranteed to reach the LLM without truncation.
-
-## Project Status
-- **Corpus fully ingested:** Yes (~4,172 chunks across 7 source texts)
-- **Backend deployed:** Yes (Render)
-- **Frontend rebuilt:** Yes (Brutalist Stitch UI implemented and connected)
-- **Pending:** N/A (v1.0 is stable and live)
-
-## License & Credits
-The literary works of Franz Kafka utilized in this corpus are in the **public domain**.
+## License
+MIT

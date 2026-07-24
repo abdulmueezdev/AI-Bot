@@ -79,3 +79,17 @@ Other handout/
 
 # Playwright screenshots
 frontend/mobile_screenshot_*.png
+
+*.log
+probe.py
+scratch.py
+patch.py
+fix_patch.py
+test_chat.py
+prod_test.py
+local_bio_test.py
+diagnostic_test*.py
+conversation_test*.py
+strip_and_verify.py
+reingest_and_verify.py
+client_secret_*.json

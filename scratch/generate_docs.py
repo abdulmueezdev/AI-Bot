@@ -24,7 +24,7 @@ def create_handoff_doc(output_path):
     # Cover Page
     title = doc.add_heading('DIGITAL CLONE AI — COMPLETE PROJECT HANDOFF', 0)
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    doc.add_paragraph('\nAuthor: Antigravity\nDate: May 2026\n').alignment = WD_ALIGN_PARAGRAPH.CENTER
+    doc.add_paragraph('\nAuthor: Alucard\nDate: May 2026\n').alignment = WD_ALIGN_PARAGRAPH.CENTER
     doc.add_page_break()
 
     # 1. What the project is
@@ -216,7 +216,7 @@ def create_explainer_doc(output_path):
     doc.save(output_path)
 
 if __name__ == '__main__':
-    handoff_path = '/home/alucard/Downloads/AI Bot/Antigravity_Project_Handoff.docx'
+    handoff_path = '/home/alucard/Downloads/AI Bot/Alucard_Project_Handoff.docx'
     explainer_path = '/home/alucard/Downloads/AI Bot/Abdul_Project_Explainer.docx'
     
     create_handoff_doc(handoff_path)

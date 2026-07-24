@@ -2,7 +2,7 @@ import os
 
 def validate_files():
     files = [
-        '/home/alucard/Downloads/AI Bot/Antigravity_Project_Handoff.docx',
+        '/home/alucard/Downloads/AI Bot/Alucard_Project_Handoff.docx',
         '/home/alucard/Downloads/AI Bot/Abdul_Project_Explainer.docx'
     ]
     
