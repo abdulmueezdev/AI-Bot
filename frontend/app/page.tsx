@@ -20,12 +20,15 @@ type State = {
 
 type Action =
   | { type: "ADD_MESSAGE"; message: Message }
+  | { type: "REMOVE_MESSAGE_BY_ID"; id: string }
   | { type: "SET_LOADING"; loading: boolean };
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
     case "ADD_MESSAGE":
       return { ...state, messages: [...state.messages, action.message] };
+    case "REMOVE_MESSAGE_BY_ID":
+      return { ...state, messages: state.messages.filter(m => m.id !== action.id) };
     case "SET_LOADING":
       return { ...state, isLoading: action.loading };
     default:
@@ -51,7 +54,7 @@ export default function Home() {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://ai-bot-tp8d.onrender.com";
     const ping = () => fetch(`${apiUrl}/health`).catch(() => {});
     ping(); // ping on load to wake it up immediately
-    const interval = setInterval(ping, 10 * 60 * 1000); // every 10 minutes
+    const interval = setInterval(ping, 4 * 60 * 1000); // every 4 minutes
     return () => clearInterval(interval);
   }, []);
 
@@ -68,6 +71,16 @@ export default function Home() {
     dispatch({ type: "ADD_MESSAGE", message: userMsg });
     setInput("");
     dispatch({ type: "SET_LOADING", loading: true });
+
+    const loadingId = crypto.randomUUID();
+    dispatch({
+      type: "ADD_MESSAGE",
+      message: {
+        id: loadingId,
+        role: "assistant",
+        content: "SYSTEM: PROCESSING...",
+      },
+    });
 
     try {
       const reply = await sendMessage(text);
@@ -121,6 +134,7 @@ export default function Home() {
         });
       }
     } finally {
+      dispatch({ type: "REMOVE_MESSAGE_BY_ID", id: loadingId });
       dispatch({ type: "SET_LOADING", loading: false });
     }
   };
