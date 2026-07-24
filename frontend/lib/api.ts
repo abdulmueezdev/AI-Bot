@@ -42,10 +42,10 @@ export const sendMessage = async (message: string): Promise<ApiResponse> => {
     }
 
     return await res.json();
-  } catch (error: any) {
+  } catch (error: unknown) {
     clearTimeout(timeoutId);
     console.error("Chat API Error:", error);
-    if (error.name === "AbortError") {
+    if (error instanceof Error && error.name === "AbortError") {
       throw error;
     }
     throw new Error("THE SYSTEM IS UNRESPONSIVE.");

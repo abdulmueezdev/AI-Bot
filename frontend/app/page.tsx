@@ -79,8 +79,8 @@ export default function Home() {
           content: reply.response,
         },
       });
-    } catch (error: any) {
-      if (error.name === "AbortError") {
+    } catch (error: unknown) {
+      if (error instanceof Error && error.name === "AbortError") {
         dispatch({
           type: "ADD_MESSAGE",
           message: {
@@ -100,7 +100,7 @@ export default function Home() {
               content: retryReply.response,
             },
           });
-        } catch (retryError) {
+        } catch {
           dispatch({
             type: "ADD_MESSAGE",
             message: {
