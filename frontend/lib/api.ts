@@ -15,7 +15,7 @@ export const getSessionId = (): string => {
 };
 
 export const sendMessage = async (message: string): Promise<ApiResponse> => {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://ai-bot-tp8d.onrender.com";
   if (!apiUrl) {
     throw new Error("NEXT_PUBLIC_API_URL is not defined");
   }
