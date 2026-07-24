@@ -47,6 +47,33 @@ async def generate(
     Raises:
         LLMUnavailableError: If both providers fail after all retries.
     """
+    import yaml
+    settings = get_settings()
+    config_path = settings.get_clone_config_path(clone_id)
+    requested_model = ""
+    if config_path.exists():
+        try:
+            config_data = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+            if "model" in config_data:
+                requested_model = str(config_data["model"])
+        except Exception:
+            pass
+
+    # Skip Groq if the model is an OpenRouter-specific model (contains '/')
+    if requested_model and "/" in requested_model:
+        try:
+            return await _call_openrouter(prompt, clone_id=clone_id, session_id=session_id)
+        except Exception as exc:
+            logger.error(
+                "all_llm_providers_failed",
+                clone_id=clone_id,
+                session_id=session_id,
+                error=str(exc),
+            )
+            raise LLMUnavailableError(
+                "OpenRouter failed after retries."
+            ) from exc
+
     try:
         return await _call_groq(prompt, clone_id=clone_id, session_id=session_id)
     except Exception as exc:
