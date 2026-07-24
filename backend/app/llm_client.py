@@ -159,6 +159,7 @@ async def _call_openrouter(
     # Load overrides from config.yaml
     temperature = settings.llm_temperature
     max_tokens = settings.max_output_tokens
+    openrouter_model = settings.openrouter_model
     config_path = settings.get_clone_config_path(clone_id)
     if config_path.exists():
         try:
@@ -167,6 +168,8 @@ async def _call_openrouter(
                 temperature = float(config_data["temperature"])
             if "max_output_tokens" in config_data:
                 max_tokens = int(config_data["max_output_tokens"])
+            if "model" in config_data:
+                openrouter_model = str(config_data["model"])
         except Exception:
             pass
 
@@ -183,7 +186,7 @@ async def _call_openrouter(
                         "X-Title": "Digital Clone AI",
                     },
                     json={
-                        "model": settings.openrouter_model,
+                        "model": openrouter_model,
                         "messages": [
                             {"role": "system", "content": prompt.system_prompt},
                             {"role": "user", "content": prompt.user_prompt},
@@ -203,11 +206,11 @@ async def _call_openrouter(
 
             logger.info(
                 "openrouter_success", clone_id=clone_id, session_id=session_id,
-                model=settings.openrouter_model, tokens=tokens,
+                model=openrouter_model, tokens=tokens,
                 latency_ms=round(elapsed_ms, 1), attempt=attempt + 1,
             )
             return LLMResponse(
-                text=text, model_used=settings.openrouter_model, provider="openrouter",
+                text=text, model_used=openrouter_model, provider="openrouter",
                 tokens_used=tokens, latency_ms=round(elapsed_ms, 1),
             )
         except Exception as exc:

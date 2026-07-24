@@ -38,7 +38,7 @@ class Settings(BaseSettings):
         description="Primary Groq model identifier",
     )
     openrouter_model: str = Field(
-        default="meta-llama/llama-3.1-70b-instruct",
+        default="meta-llama/llama-4-scout-17b-16e-instruct",
         description="Fallback OpenRouter model identifier",
     )
     embedding_model: str = Field(

@@ -21,6 +21,8 @@ logger = structlog.get_logger(__name__)
 
 # Module-level client (initialized on first use)
 _client: genai.Client | None = None
+_embedding_cache: dict[str, list[float]] = {}
+MAX_CACHE_SIZE = 1000
 
 
 def _get_client() -> genai.Client:
@@ -108,12 +110,19 @@ async def embed_query(
     Returns:
         Embedding vector as a list of floats.
     """
+    if query in _embedding_cache:
+        return _embedding_cache[query]
+
     async for results in embed_texts(
         [query],
         clone_id=clone_id,
         task_type="RETRIEVAL_QUERY",
     ):
-        return results[0]
+        embedding = results[0]
+        if len(_embedding_cache) >= MAX_CACHE_SIZE:
+            _embedding_cache.pop(next(iter(_embedding_cache)))
+        _embedding_cache[query] = embedding
+        return embedding
     
     raise RuntimeError("No embeddings returned for query.")
 

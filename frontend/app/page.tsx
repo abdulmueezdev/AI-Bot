@@ -52,7 +52,11 @@ export default function Home() {
   // Keep-alive ping to prevent Render instance from spinning down
   useEffect(() => {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://ai-bot-tp8d.onrender.com";
-    const ping = () => fetch(`${apiUrl}/health`).catch(() => {});
+    const ping = () => fetch(`${apiUrl}/chat/alucard`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: 'keepalive', session_id: 'keepalive' })
+    }).catch(() => {});
     ping(); // ping on load to wake it up immediately
     const interval = setInterval(ping, 4 * 60 * 1000); // every 4 minutes
     return () => clearInterval(interval);
