@@ -89,8 +89,11 @@ async def add_documents(
             }
         )
 
-    # Batch insert
-    client.table("documents").insert(rows).execute()
+    # Batch upsert to prevent duplicates
+    client.table("documents").upsert(
+        rows, 
+        on_conflict="clone_id,source_file,chunk_index"
+    ).execute()
 
     logger.info(
         "documents_added",
@@ -118,6 +121,7 @@ async def query(
         Empty list if no matching documents exist.
     """
     import random
+
     settings = get_settings()
     if top_k is None:
         top_k = settings.top_k_results
@@ -166,7 +170,9 @@ async def query(
             deduped_results.append(r)
 
     # Filter by threshold BEFORE sampling so we don't throw away good chunks
-    filtered_results = [r for r in deduped_results if r.similarity >= settings.similarity_threshold]
+    filtered_results = [
+        r for r in deduped_results if r.similarity >= settings.similarity_threshold
+    ]
 
     if len(filtered_results) <= top_k:
         final_results = filtered_results
@@ -249,12 +255,7 @@ async def delete_collection(clone_id: str) -> bool:
     """
     client = _get_client()
     try:
-        response = (
-            client.table("documents")
-            .delete()
-            .eq("clone_id", clone_id)
-            .execute()
-        )
+        response = client.table("documents").delete().eq("clone_id", clone_id).execute()
         deleted = len(response.data) > 0 if response.data else False
         if deleted:
             logger.info("collection_deleted", clone_id=clone_id)
@@ -274,8 +275,15 @@ async def delete_file_chunks(clone_id: str, file_name: str) -> int:
             .execute()
         )
         deleted = len(response.data) if response.data else 0
-        logger.info("file_chunks_deleted", clone_id=clone_id, file=file_name, count=deleted)
+        logger.info(
+            "file_chunks_deleted", clone_id=clone_id, file=file_name, count=deleted
+        )
         return deleted
     except Exception as exc:
-        logger.error("file_chunks_delete_failed", clone_id=clone_id, file=file_name, error=str(exc))
+        logger.error(
+            "file_chunks_delete_failed",
+            clone_id=clone_id,
+            file=file_name,
+            error=str(exc),
+        )
         return 0

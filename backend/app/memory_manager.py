@@ -31,6 +31,12 @@ EPISODIC_SUMMARY_WORD_TARGET: int = 100
 EPISODIC_TOP_K: int = 2
 ENTITY_TOP_K: int = 5
 
+OPPOSITES_MAP: dict[str, list[str]] = {
+    "nietzsche": ["marcus_aurelius", "socrates"],
+    "stoicism": ["existentialism"],
+    "kafka": ["nietzsche", "dostoevsky"],
+}
+
 SUMMARY_INSTRUCTION: str = (
     "Summarize this conversation in exactly 100 words. "
     "Focus on decisions made, topics discussed, and any commitments "
@@ -172,9 +178,7 @@ class MemoryManager:
 
         return messages
 
-    def _check_session_timeout(
-        self, clone_id: str, session_id: str
-    ) -> bool:
+    def _check_session_timeout(self, clone_id: str, session_id: str) -> bool:
         """Check if a session has timed out (>30 minutes since last activity).
 
         Args:
@@ -273,9 +277,7 @@ class MemoryManager:
             lines.append(f"Assistant: {asst_msg.content}")
         return "\n".join(lines)
 
-    async def _generate_summary(
-        self, clone_id: str, transcript: str
-    ) -> str | None:
+    async def _generate_summary(self, clone_id: str, transcript: str) -> str | None:
         """Generate a 100-word summary of the conversation using the LLM.
 
         Args:
@@ -376,9 +378,7 @@ class MemoryManager:
 
     # ── Tier 2: Episodic Memory Retrieval ──────────────────────────────
 
-    async def get_episodic_context(
-        self, clone_id: str, query: str
-    ) -> list[str]:
+    async def get_episodic_context(self, clone_id: str, query: str) -> list[str]:
         """Retrieve relevant past conversation summaries via Supabase RPC.
 
         Embeds the query and searches the episodic_memory table
@@ -431,9 +431,7 @@ class MemoryManager:
 
     # ── Tier 3: Entity Memory ──────────────────────────────────────────
 
-    async def _extract_and_store_entities(
-        self, clone_id: str, summary: str
-    ) -> None:
+    async def _extract_and_store_entities(self, clone_id: str, summary: str) -> None:
         """Extract entities from a summary and store them in Supabase.
 
         Uses the LLM to extract named entities, then upserts them
@@ -514,9 +512,7 @@ class MemoryManager:
                 # Strip markdown code blocks
                 lines = text.split("\n")
                 text = "\n".join(
-                    line
-                    for line in lines
-                    if not line.strip().startswith("```")
+                    line for line in lines if not line.strip().startswith("```")
                 )
 
             parsed = json.loads(text)
@@ -571,6 +567,34 @@ class MemoryManager:
                 error=str(exc),
             )
             return []
+
+    # ── Tier 4: Dialectic Memory ───────────────────────────────────────
+
+    async def get_dialectic_context(self, clone_id: str, query: str) -> list[str]:
+        """Retrieve dialectic context based on the opposites map."""
+        query_lower = query.lower()
+        opposites = []
+        for key, vals in OPPOSITES_MAP.items():
+            if key in query_lower:
+                opposites.extend(vals)
+
+        if not opposites:
+            return []
+
+        dialectic_query = " ".join(opposites)
+
+        episodic = await self.get_episodic_context(clone_id, dialectic_query)
+        entity_records = await self.get_entity_context(clone_id, dialectic_query)
+
+        results = []
+        results.extend(episodic)
+        for ent in entity_records:
+            results.append(
+                f"{ent.get('entity_type', 'unknown')}: "
+                f"{ent.get('entity_name', '')} — {ent.get('context', '')}"
+            )
+
+        return results
 
 
 # ── Module-level singleton ─────────────────────────────────────────────

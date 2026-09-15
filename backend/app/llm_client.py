@@ -48,6 +48,7 @@ async def generate(
         LLMUnavailableError: If both providers fail after all retries.
     """
     import yaml
+
     settings = get_settings()
     config_path = settings.get_clone_config_path(clone_id)
     requested_model = ""
@@ -62,7 +63,9 @@ async def generate(
     # Skip Groq if the model is an OpenRouter-specific model (contains '/')
     if requested_model and "/" in requested_model:
         try:
-            return await _call_openrouter(prompt, clone_id=clone_id, session_id=session_id)
+            return await _call_openrouter(
+                prompt, clone_id=clone_id, session_id=session_id
+            )
         except Exception as exc:
             logger.error(
                 "all_llm_providers_failed",
@@ -70,9 +73,7 @@ async def generate(
                 session_id=session_id,
                 error=str(exc),
             )
-            raise LLMUnavailableError(
-                "OpenRouter failed after retries."
-            ) from exc
+            raise LLMUnavailableError("OpenRouter failed after retries.") from exc
 
     try:
         return await _call_groq(prompt, clone_id=clone_id, session_id=session_id)
@@ -99,12 +100,16 @@ async def generate(
 
 
 async def _call_groq(
-    prompt: PromptResult, *, clone_id: str, session_id: str,
+    prompt: PromptResult,
+    *,
+    clone_id: str,
+    session_id: str,
 ) -> LLMResponse:
     """Call Groq API with 3-retry exponential backoff."""
     import yaml
+
     settings = get_settings()
-    
+
     # Load overrides from config.yaml
     temperature = settings.llm_temperature
     max_tokens = settings.max_output_tokens
@@ -130,10 +135,11 @@ async def _call_groq(
             try:
                 messages = [
                     {"role": "system", "content": prompt.system_prompt.strip()},
-                    {"role": "user", "content": prompt.user_prompt}
+                    {"role": "user", "content": prompt.user_prompt},
                 ]
 
                 import json as _json
+
                 print("=== LLM PAYLOAD DEBUG ===")
                 print(_json.dumps(messages, indent=2, ensure_ascii=False)[:3000])
                 print("=========================")
@@ -152,37 +158,54 @@ async def _call_groq(
                 tokens = response.usage.total_tokens if response.usage else 0
 
                 logger.info(
-                    "groq_success", clone_id=clone_id, session_id=session_id,
-                    model=groq_model, tokens=tokens,
-                    latency_ms=round(elapsed_ms, 1), attempt=attempt + 1,
+                    "groq_success",
+                    clone_id=clone_id,
+                    session_id=session_id,
+                    model=groq_model,
+                    tokens=tokens,
+                    latency_ms=round(elapsed_ms, 1),
+                    attempt=attempt + 1,
                 )
                 return LLMResponse(
-                    text=text, model_used=groq_model, provider="groq",
-                    tokens_used=tokens, latency_ms=round(elapsed_ms, 1),
+                    text=text,
+                    model_used=groq_model,
+                    provider="groq",
+                    tokens_used=tokens,
+                    latency_ms=round(elapsed_ms, 1),
                 )
             except Exception as exc:
                 last_error = exc
                 if attempt < settings.max_retries - 1:
                     delay = settings.retry_delays[attempt]
                     logger.warning(
-                        "groq_retry", clone_id=clone_id, session_id=session_id,
-                        attempt=attempt + 1, delay_seconds=delay, error=str(exc),
+                        "groq_retry",
+                        clone_id=clone_id,
+                        session_id=session_id,
+                        attempt=attempt + 1,
+                        delay_seconds=delay,
+                        error=str(exc),
                     )
                     await asyncio.sleep(delay)
     finally:
         await client.close()
 
-    raise RuntimeError(f"Groq failed after {settings.max_retries} attempts: {last_error}")
+    raise RuntimeError(
+        f"Groq failed after {settings.max_retries} attempts: {last_error}"
+    )
 
 
 async def _call_openrouter(
-    prompt: PromptResult, *, clone_id: str, session_id: str,
+    prompt: PromptResult,
+    *,
+    clone_id: str,
+    session_id: str,
 ) -> LLMResponse:
     """Call OpenRouter API with 3-retry exponential backoff."""
     import yaml
+
     settings = get_settings()
     last_error: Exception | None = None
-    
+
     # Load overrides from config.yaml
     temperature = settings.llm_temperature
     max_tokens = settings.max_output_tokens
@@ -225,29 +248,44 @@ async def _call_openrouter(
             elapsed_ms = (time.monotonic() - start_time) * 1000
 
             if response.status_code != 200:
-                raise RuntimeError(f"OpenRouter HTTP {response.status_code}: {response.text}")
+                raise RuntimeError(
+                    f"OpenRouter HTTP {response.status_code}: {response.text}"
+                )
 
             data = response.json()
             text = data["choices"][0]["message"]["content"]
             tokens = data.get("usage", {}).get("total_tokens", 0)
 
             logger.info(
-                "openrouter_success", clone_id=clone_id, session_id=session_id,
-                model=openrouter_model, tokens=tokens,
-                latency_ms=round(elapsed_ms, 1), attempt=attempt + 1,
+                "openrouter_success",
+                clone_id=clone_id,
+                session_id=session_id,
+                model=openrouter_model,
+                tokens=tokens,
+                latency_ms=round(elapsed_ms, 1),
+                attempt=attempt + 1,
             )
             return LLMResponse(
-                text=text, model_used=openrouter_model, provider="openrouter",
-                tokens_used=tokens, latency_ms=round(elapsed_ms, 1),
+                text=text,
+                model_used=openrouter_model,
+                provider="openrouter",
+                tokens_used=tokens,
+                latency_ms=round(elapsed_ms, 1),
             )
         except Exception as exc:
             last_error = exc
             if attempt < settings.max_retries - 1:
                 delay = settings.retry_delays[attempt]
                 logger.warning(
-                    "openrouter_retry", clone_id=clone_id, session_id=session_id,
-                    attempt=attempt + 1, delay_seconds=delay, error=str(exc),
+                    "openrouter_retry",
+                    clone_id=clone_id,
+                    session_id=session_id,
+                    attempt=attempt + 1,
+                    delay_seconds=delay,
+                    error=str(exc),
                 )
                 await asyncio.sleep(delay)
 
-    raise RuntimeError(f"OpenRouter failed after {settings.max_retries} attempts: {last_error}")
+    raise RuntimeError(
+        f"OpenRouter failed after {settings.max_retries} attempts: {last_error}"
+    )

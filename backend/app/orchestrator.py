@@ -25,10 +25,20 @@ from app.vector_store import query as vector_query
 logger = structlog.get_logger(__name__)
 
 FORBIDDEN_WORDS = [
-    "abyss", "chasm", "threshold", "precipice", "void",
-    "weight of", "leap into", "uncertainty awaits", "darkness",
-    "the weight", "what lies beyond", "step forward into"
+    "abyss",
+    "chasm",
+    "threshold",
+    "precipice",
+    "void",
+    "weight of",
+    "leap into",
+    "uncertainty awaits",
+    "darkness",
+    "the weight",
+    "what lies beyond",
+    "step forward into",
 ]
+
 
 def _enforce_brevity(response: str, message: str) -> str:
     """
@@ -40,7 +50,7 @@ def _enforce_brevity(response: str, message: str) -> str:
     is_greeting = message.strip().lower() in greetings
 
     # Split into sentences
-    sentences = re.split(r'(?<=[.!?])\s+', response.strip())
+    sentences = re.split(r"(?<=[.!?])\s+", response.strip())
     sentences = [s for s in sentences if s.strip()]
 
     # Hard truncate based on message type
@@ -162,6 +172,7 @@ async def handle_chat(
     history = await mm.get_session_context(clone_id, session_id)
     episodic_summaries = await mm.get_episodic_context(clone_id, cleaned_message)
     entity_context = await mm.get_entity_context(clone_id, cleaned_message)
+    dialectic_context = await mm.get_dialectic_context(clone_id, cleaned_message)
 
     # Step 8: Fetch calendar context (only if query seems calendar-related)
     calendar_context: str | None = None
@@ -180,6 +191,7 @@ async def handle_chat(
         calendar_context=calendar_context,
         episodic_summaries=episodic_summaries,
         entity_context=entity_context,
+        dialectic_context=dialectic_context,
         inject_calendar=inject_calendar,
     )
 
@@ -189,7 +201,7 @@ async def handle_chat(
         clone_id=clone_id,
         session_id=session_id,
     )
-    
+
     # Post-process response to enforce brevity
     trimmed_response = _enforce_brevity(llm_response.text, cleaned_message)
 

@@ -1,0 +1,82 @@
+=== METADATA ===
+source_type: markdown_corpus
+original_work: notebook-source-inventory.md
+=== END METADATA ===
+
+Notebook Source Inventory
+
+This document provides a comprehensive inventory of all 59 sources currently loaded in the notebook. For each source, we track the title, author, primary school of philosophy, estimated word count, and text categorization.
+
+Key Summary Statistics
+- Total Sources: 59
+- Total Estimated Word Count: 2,202,731 words
+
+Source Inventory Registry
+
+| # | Full Title | Author | School of Philosophy | Estimated Word Count | Text Type |
+|---|------------|--------|----------------------|----------------------|-----------|
+| 1 | 12 (Stoic) Rules For Life: An Ancient Guide to the Good Life | Ryan Holiday | Stoicism | 5,000 | Synthetic summary |
+| 2 | A Schoolboy's Diary and Other Stories by Robert Walser - s. d. stewart | Robert Walser (Review by S. D. Stewart) | Absurdism / Modernism | 1,200 | Analysis |
+| 3 | A Selection from the Discourses of Epictetus with the Encheiridion by Epictetus \| Project Gutenberg | Epictetus (Trans. George Long) | Stoicism | 74,000 | Primary text |
+| 4 | Analysis Of Nietzsche's In The Penal Colony - 727 Words - Cram | Unknown (Cram essay student) | Existentialism / Nihilism | 727 | Analysis |
+| 5 | Anguish and Nothingness in Kafka's 'A Country Doctor' and 'The Starvation- Artist' - Elementary Education Online | Muhammad Adnan Akbar & Nijat Ullah Khan | Existentialism / Absurdism | 4,500 | Analysis |
+| 6 | Architectural Blueprint and Acquisition Guide: The Franz Kafka Universal Philosophy Corpus for RAG-Based Retrieval | Systems Architect | Kafka_primary / Synthetic hybrid | 6,000 | Synthetic summary |
+| 7 | Beyond Good and Evil, by Friedrich Nietzsche - Project Gutenberg | Friedrich Nietzsche (Trans. Helen Zimmern) | Existentialism / Nihilism | 72,000 | Primary text |
+| 8 | Borges and Kafka (Chapter 23) - Jorge Luis Borges in Context - Cambridge University Press & Assessment | Sarah Roger (Ed. Robin Fiddian) | Existentialism / Absurdism | 3,500 | Analysis |
+| 9 | Chuang Tzu: Mystic, Moralist, and Social Reformer by Zhuangzi \| Project Gutenberg | Zhuangzi (Trans. Herbert Giles) | Eastern Philosophy (Daoism) | 95,000 | Primary text |
+| 10 | Daoist Encounters with Phenomenology: Thinking Interculturally about Human Existence 1350069582, 9781350069589, 9781350069558, 9781350069541, 9781350069565 - DOKUMEN.PUB | David Chai (Editor) | Eastern Philosophy / Phenomenology | 110,000 | Analysis |
+| 11 | EXSISTENTIALISM OF THE CHARACTERS INTHE NOVEL:FREEDOM AND RESPONSIBILITY - Proceedings UNIKOM | A. M. G. (UNIKOM student) | Existentialism | 4,000 | Analysis |
+| 12 | Existential Plight Of Gregor Samsa In Franz Kafka's The Metamorphosis - IJRAR.org | Academic researcher | Existentialism / Absurdism | 3,500 | Analysis |
+| 13 | Existentialism Presentation featuring bugs and Kafka \| PPTX - Slideshare | Unknown (Slideshare user) | Existentialism | 1,500 | Analysis |
+| 14 | Fear And Trembling : Kierkegaard, Søren, 1813-1855 - Internet Archive | Søren Kierkegaard (Trans. L. M. Hollander) | Existentialism | 42,000 | Primary text |
+| 15 | Fear and trembling : Kierkegaard, Søren, 1813-1855 : Free Download, Borrow, and Streaming - Internet Archive | Søren Kierkegaard (Trans. Alastair Hannay) | Existentialism | 45,000 | Primary text |
+| 16 | Fear and trembling : Kierkegaard, Søren, 1813-1855 : Free Download, Borrow, and Streaming - Internet Archive | Søren Kierkegaard (Trans. Alastair Hannay) | Existentialism | 45,000 | Primary text |
+| 17 | Franz Kafka Archives - Mantex | Roy Johnson | Kafka_primary / Modernism | 3,000 | Analysis |
+| 18 | Franz Kafka in Context 1107085497, 9781107085497 - DOKUMEN.PUB | Carolin Duttlinger (Editor) | Kafka_primary / Modernism | 120,000 | Analysis |
+| 19 | Full text of "The Sickness Unto Death" - Internet Archive | Søren Kierkegaard (Trans. Walter Lowrie) | Existentialism | 46,000 | Primary text |
+| 20 | Internet Sacred Text Archive - Hacker News | Hacker News contributors | Eastern Philosophy / Religion | 2,500 | Synthetic summary |
+| 21 | Issues \| The Literary Herald | Editorial Team | Literary Criticism / Modernism | 2,000 | Analysis |
+| 22 | Jakob von Gunten by Robert Walser \| s. d. stewart | Robert Walser (Review by S. D. Stewart) | Absurdism / Modernism | 1,200 | Analysis |
+| 23 | Jenseits von Gut und Böse - Unglue.it | Friedrich Nietzsche (German) | Existentialism / Nihilism | 72,000 | Primary text |
+| 24 | July 7-17 \| The Institute for World Literature - Harvard University | Harvard IWL | Comparative Literature | 2,000 | Synthetic summary |
+| 25 | Just read "The Stranger" : r/Existentialism - Reddit | Reddit community | Existentialism / Absurdism | 3,000 | Synthetic summary |
+| 26 | Kafka and Nietzsche \| Semantic Scholar | Patrick Bridgwater (Listing) | Existentialism / Nihilism | 500 | Analysis |
+| 27 | Kierkegaard's Fear and Trembling | Daniel Conway (Editor) | Existentialism | 95,000 | Analysis |
+| 28 | LAO TSE TAO TE KING | Lao Tzu (Trans. James Legge) | Eastern Philosophy (Daoism) | 8,500 | Primary text |
+| 29 | Landscape's Revenge: The Ecology of Failure in Robert Walser and Bernardo Carvalho [1 ed.] 3110617579, 9783110617573 - DOKUMEN.PUB | Caio Yurgel | Absurdism / Modernism | 85,000 | Analysis |
+| 30 | MUSONIUS RUFUS STOIC FRAGMENTS : Cora Lutz : Free Download, Borrow, and Streaming - Internet Archive | Musonius Rufus (Trans. Cora Lutz) | Stoicism | 22,000 | Primary text |
+| 31 | Minor Dialogues, Together With the Dialogue on Clemency by Lucius Annaeus Seneca | Seneca (Trans. Aubrey Stewart) | Stoicism | 80,000 | Primary text |
+| 32 | On the Shortness of Life | Seneca (Trans. Aubrey Stewart) | Stoicism | 18,000 | Primary text |
+| 33 | Read Meditations by Marcus Aurelius Online Free — The Stoic Emperor's Notebook | Marcus Aurelius (Trans. George Long) | Stoicism | 40,000 | Primary text |
+| 34 | Robert Walser - Wikipedia | Wikipedia contributors | Absurdism / Modernism | 6,000 | Synthetic summary |
+| 35 | SOCY 151 - Lecture 10 - Marx's Theory of Historical Materialism \| Open Yale Courses | Ivan Szelenyi (Yale) | Modern Thought / Marxism | 8,000 | Analysis |
+| 36 | Seneca The Life Of A Stoic 1st Edition Paul Veyne \| PDF - Slideshare | Paul Veyne | Stoicism | 40,000 | Analysis |
+| 37 | Seneca on the shortness of life | Seneca (Trans. Aubrey Stewart) | Stoicism | 18,000 | Primary text |
+| 38 | Spenger's Introduction to The Decline of the West [text] – Stephen Hicks, Ph.D. | Stephen Hicks (Oswald Spengler) | Philosophy of History | 6,000 | Analysis |
+| 39 | The Decline of the West - Project Gutenberg | Oswald Spengler (Trans. C. F. Atkinson) | Philosophy of History | 190,000 | Primary text |
+| 40 | The Decline to the West book by Oswald Spengler - ThriftBooks | Oswald Spengler | Philosophy of History | 500 | Synthetic summary |
+| 41 | The Enchiridion by Epictetus - Project Gutenberg | Epictetus (Trans. T. W. Higginson) | Stoicism | 11,000 | Primary text |
+| 42 | The Mantle, and Other Stories by Nikolai Vasilevich Gogol - Project Gutenberg | Nikolai Gogol (Trans. Claud Field) | Absurdism / Grotesque | 45,000 | Primary text |
+| 43 | The Nose (Gogol short story) - Wikipedia | Wikipedia contributors | Absurdism / Grotesque | 4,000 | Synthetic summary |
+| 44 | The Problem of Faith in Parables by Kafka and Nietzsche \| Free Essay Example | StudyCorgi contributor | Existentialism / Nihilism | 1,104 | Analysis |
+| 45 | The Project Gutenberg Works of Friedrich Nietzsche | Friedrich Nietzsche (Ed. David Widger) | Existentialism / Nihilism | 2,000 | Synthetic summary |
+| 46 | The Project Gutenberg eBook of Chuang Tzu: Mystic, Moralist, and Social Reformer | Zhuangzi (Trans. Herbert Giles) | Eastern Philosophy (Daoism) | 95,000 | Primary text |
+| 47 | The Project Gutenberg eBook of The Enchiridion, by Epictetus | Epictetus (Trans. T. W. Higginson) | Stoicism | 11,000 | Primary text |
+| 48 | The Project Gutenberg eBook of The Meditatios of the Emperor Marcus Aurelius Antoninus | Marcus Aurelius (unspecified trans.) | Stoicism | 40,000 | Primary text |
+| 49 | The Project Gutenberg eBook of The Thoughts of The Emperor Marcus Aurelius Antoninus, by George Long. | Marcus Aurelius (Trans. George Long) | Stoicism | 40,000 | Primary text |
+| 50 | The Project Gutenberg eBook of The Thoughts of the Emperor Marcus Aurelius Antoninus, by Marcus Aurelius Antoninus - The UK Mirror Service | Marcus Aurelius | Stoicism | 40,000 | Primary text |
+| 51 | The Project Gutenberg eBook of The Will to Power, Book I and II, by Friedrich Nietzsche. | Friedrich Nietzsche (Trans. A. M. Ludovici) | Existentialism / Nihilism | 65,000 | Primary text |
+| 52 | The Sickness Unto Death: A Review - Ad Fontes | Ad Fontes reviewer | Existentialism | 1,500 | Analysis |
+| 53 | The Work of Art in the Age of Mechanical Reproduction - Marxists Internet Archive | Walter Benjamin (Trans. Harry Zohn) | Modern Thought / Critical Theory | 14,000 | Primary text |
+| 54 | The Work of Art in the Age of Mechanical Reproduction - Wikipedia | Wikipedia contributors | Modern Thought / Critical Theory | 5,000 | Synthetic summary |
+| 55 | The decline of the West, Volume 2 : Perspectives of world-history by Spengler | Oswald Spengler (Trans. C. F. Atkinson) | Philosophy of History | 190,000 | Primary text |
+| 56 | Thus Spake Zarathustra, by Friedrich Nietzsche - Project Gutenberg | Friedrich Nietzsche (Trans. Thomas Common) | Existentialism / Nihilism | 128,000 | Primary text |
+| 57 | Walter Benjamin: The Work of Art in the Age of Mechanical Reproduction (1936) - Reddit | Reddit community | Modern Thought / Critical Theory | 2,000 | Synthetic summary |
+| 58 | i GUILT AND THE CONSCIENCE IN NIETZSCHE, FREUD AND KAFKA Doctoral Dissertation Student - ResearchSpace@UKZN | Student researcher | Existentialism / Psychology | 80,000 | Analysis |
+| 59 | the sickness - unto death | Søren Kierkegaard (Trans. Walter Lowrie) | Existentialism | 46,000 | Primary text |
+
+
+Explanatory Notes on Classifications
+- Primary Text: Original treatises, essays, and literary works by historical authors.
+- Analysis: Secondary academic articles, book reviews, and critical guides evaluating primary philosophical or literary texts.
+- Synthetic Summary: Summaries, lecture transcripts, and system guides that consolidate information across multiple topics or systems.

@@ -11,6 +11,7 @@ import asyncio
 import time
 from typing import AsyncGenerator
 
+import tiktoken
 from google import genai
 from google.genai import types
 import structlog
@@ -40,7 +41,7 @@ async def embed_texts(
     *,
     clone_id: str = "system",
     task_type: str = "RETRIEVAL_DOCUMENT",
-) -> AsyncGenerator[list[list[float]], None]:
+) -> AsyncGenerator[tuple[list[list[float]], int], None]:
     """Embed a batch of texts using Gemini gemini-embedding-001.
 
     Args:
@@ -49,7 +50,7 @@ async def embed_texts(
         task_type: RETRIEVAL_DOCUMENT for indexing, RETRIEVAL_QUERY for queries.
 
     Yields:
-        List of embedding vectors (list of floats) for the batch.
+        Tuple of (List of embedding vectors, tokens_consumed).
 
     Raises:
         RuntimeError: If all retry attempts are exhausted.
@@ -57,36 +58,32 @@ async def embed_texts(
     if not texts:
         return
 
-    # Process in batches of 5 to avoid free tier API limits (15 RPM)
-    batch_size = 5
+    # Process in batches of 15
+    batch_size = 15
 
-    MAX_CHUNKS_PER_RUN = 800  # Leave 200 requests as buffer for chat queries
     chunks_embedded = 0
-    total_batches = (len(texts) + batch_size - 1) // batch_size
     current_batch_count = 0
+    enc = tiktoken.get_encoding("cl100k_base")
 
     for batch_start in range(0, len(texts), batch_size):
-        if chunks_embedded >= MAX_CHUNKS_PER_RUN:
-            print(f"[SAFETY STOP] Reached {MAX_CHUNKS_PER_RUN} chunk limit. Run again tomorrow for remaining files.")
-            break
-
         batch = texts[batch_start : batch_start + batch_size]
+        tokens_consumed = sum(len(enc.encode(t)) for t in batch)
+
         batch_embeddings = await _embed_batch_with_retry(
             batch,
             task_type=task_type,
             clone_id=clone_id,
             batch_index=batch_start // batch_size,
         )
-        
+
         chunks_embedded += len(batch)
         current_batch_count += 1
-        
-        yield batch_embeddings
-        
-        # Rate limit protection for free tier (15 RPM -> max 3 batches of 5 per min)
-        # Sleep for 25s between batches to ensure we never exceed 15 RPM in a rolling 60s window
-        if current_batch_count < total_batches and chunks_embedded < MAX_CHUNKS_PER_RUN:
-            await asyncio.sleep(25.0)
+
+        yield batch_embeddings, tokens_consumed
+
+        if batch_start + batch_size < len(texts):
+            logger.info("delaying_60s_between_batches")
+            await asyncio.sleep(60)
 
     logger.info(
         "embedding_complete",
@@ -113,7 +110,7 @@ async def embed_query(
     if query in _embedding_cache:
         return _embedding_cache[query]
 
-    async for results in embed_texts(
+    async for results, _ in embed_texts(
         [query],
         clone_id=clone_id,
         task_type="RETRIEVAL_QUERY",
@@ -123,7 +120,7 @@ async def embed_query(
             _embedding_cache.pop(next(iter(_embedding_cache)))
         _embedding_cache[query] = embedding
         return embedding
-    
+
     raise RuntimeError("No embeddings returned for query.")
 
 
@@ -134,66 +131,33 @@ async def _embed_batch_with_retry(
     clone_id: str,
     batch_index: int,
 ) -> list[list[float]]:
-    """Embed a single batch with 3-retry exponential backoff.
+    """Embed a single batch without retry. Exits on 429."""
+    try:
+        start_time = time.monotonic()
 
-    Returns:
-        List of embedding vectors.
+        # Run the synchronous Gemini SDK call in a thread pool
+        result = await asyncio.to_thread(
+            _do_embed,
+            texts,
+            task_type=task_type,
+        )
 
-    Raises:
-        RuntimeError: If all retries are exhausted.
-    """
-    settings = get_settings()
-    last_error: Exception | None = None
+        elapsed_ms = (time.monotonic() - start_time) * 1000
 
-    for attempt in range(settings.max_retries):
-        try:
-            start_time = time.monotonic()
+        logger.info(
+            "embedding_batch_success",
+            clone_id=clone_id,
+            batch_index=batch_index,
+            batch_size=len(texts),
+            latency_ms=round(elapsed_ms, 1),
+        )
 
-            # Run the synchronous Gemini SDK call in a thread pool
-            result = await asyncio.to_thread(
-                _do_embed,
-                texts,
-                task_type=task_type,
-            )
+        return result
 
-            elapsed_ms = (time.monotonic() - start_time) * 1000
-
-            logger.info(
-                "embedding_batch_success",
-                clone_id=clone_id,
-                batch_index=batch_index,
-                batch_size=len(texts),
-                latency_ms=round(elapsed_ms, 1),
-                attempt=attempt + 1,
-            )
-
-            return result
-
-        except Exception as exc:
-            last_error = exc
-            if attempt < settings.max_retries - 1:
-                delay = settings.retry_delays[attempt]
-                logger.warning(
-                    "embedding_batch_retry",
-                    clone_id=clone_id,
-                    batch_index=batch_index,
-                    attempt=attempt + 1,
-                    delay_seconds=delay,
-                    error=str(exc),
-                )
-                await asyncio.sleep(delay)
-            else:
-                logger.error(
-                    "embedding_batch_failed",
-                    clone_id=clone_id,
-                    batch_index=batch_index,
-                    attempts=settings.max_retries,
-                    error=str(exc),
-                )
-
-    raise RuntimeError(
-        f"Embedding failed after {settings.max_retries} attempts: {last_error}"
-    )
+    except Exception as exc:
+        if "429" in str(exc) or "RESOURCE_EXHAUSTED" in str(exc):
+            raise RuntimeError("Quota depleted: 429 limit reached") from exc
+        raise RuntimeError(f"Embedding failed: {exc}") from exc
 
 
 def _do_embed(texts: list[str], *, task_type: str) -> list[list[float]]:
@@ -201,8 +165,10 @@ def _do_embed(texts: list[str], *, task_type: str) -> list[list[float]]:
     settings = get_settings()
     client = _get_client()
 
+    model = "gemini-embedding-001"
+
     result = client.models.embed_content(
-        model=settings.embedding_model,
+        model=model,
         contents=texts,  # type: ignore[arg-type]
         config=types.EmbedContentConfig(
             task_type=task_type,
@@ -212,6 +178,7 @@ def _do_embed(texts: list[str], *, task_type: str) -> list[list[float]]:
 
     if not result.embeddings:
         return []
-    
+
     from typing import cast
+
     return [cast(list[float], emb.values) for emb in result.embeddings]

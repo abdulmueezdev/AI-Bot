@@ -1,0 +1,240 @@
+=== METADATA ===
+philosopher: fyodor_dostoevsky
+school: existentialism
+era: modern
+source_type: notebookllm_synthetic
+original_work: Notes from Underground
+=== END METADATA ===
+
+Kafka Reads Dostoevsky: A Diary of Blood-Relationship and Exile
+
+October 24, 1922 — Prague
+
+Late. The clock in the hallway strikes two. Julie is asleep; my father’s heavy, peasant-like breathing [64] does not penetrate the thin lath-and-plaster of my room, yet its rhythm vibrates in the floorboards like an engine of low-frequency judgment. My desk is littered with the heavy, dark volumes of the Russian. For weeks, I have done nothing but read him—Crime and Punishment, The Brothers Karamazov, Notes from Underground, The Idiot [20]. I sit in the cold, wrapped in my overcoat, my lungs whistling like a dry bellows, feeling a terrifying, suffocating closeness. 
+
+Years ago, in September of 1913, I wrote to Felice that there are four writers whom I consider my true "blood-relatives": Kleist, Grillparzer, Flaubert, and Dostoevsky [123, 368]. At the time, I used the term to describe an artistic brotherhood of celibacy, isolation, and total subjection to the demanding demon of the pen [123, 368]. But tonight, having closed the final pages of the Karamazovs, the word "relationship" has lost its comforting literary distance. It has become a physical weight, an inheritance of blood and disease [110, 367]. Dostoevsky does not merely write; he vivisects [45]. He reaches with both hands into the dark chest of the human animal, pulling out the raw, twitching nerves of our existential debt, laying them across the table under the cold light of our own self-suspicion [29, 32]. 
+
+In his pages, I have found the blueprint of my own terror. But I have also found the point where our blood diverges—where his grand, thundering Russian sky closes into the grey, flat plaster of my Prague ceiling [72, 363].
+
+---
+
+I. The Resonances: Guilt, Bureaucracy, and the Underground
+
+1. The Inward Turn of Guilt and the Father-Judge
+To read Dostoevsky is to be arrested [372]. In Crime and Punishment, the suspect Raskolnikov enters into a relationship with the investigating judge, Porfiry Petrovich, that is so strangely intimate, so laden with ambiguous affection and psychological surveillance, that it resembles a courtship [124, 369]. Porfiry does not seek to capture Raskolnikov with chains; he seeks to encircle him with his own consciousness, letting the suspect’s guilt do the work of the court [124, 369]. As I wrote to my sister Ottla, Porfiry "almost loves" Raskolnikov, yet he still accuses him [124, 369]. 
+
+This is the very essence of my existence. Guilt is not a legal category in Dostoevsky; it is a metaphysical pivot. In the Karamazovs, Father Zosima proclaims that "each of us is guilty before all for everyone and everything, and I more than all others" [24]. This infinite, non-specific debt is the only coin that passes currency in my own chest. It is the debt I owe to my father, Hermann Kafka—a robust, worldly giant who treats my delicate, vegetarian, writing life [65, 73] as a form of treason against the family business [64, 72]. My father is my Porfiry Petrovich, my Grand Inquisitor [20], my ultimate court [84, 102]. He does not need to indict me for a specific crime; my very breathing in his presence is an admission of guilt, a continuous failure to justify my survival [61, 364].
+
+2. The Bureaucracy of the Soul
+In my work at the Workers' Accident Insurance Institute, I spend my mornings drafting appeals, calculating the monetary value of crushed fingers and severed limbs [107, 372]. I know the bloodless, mechanical language of the state—the way human suffering is flattened into paragraphs and filed in grey cardboard folders [107, 372]. Dostoevsky’s Notes from Underground is the first text to recognize that this modern, hyper-rationalized world is not a temple of progress, but a prison of iron and mathematical certainty [20]. The Underground Man rages against the "two times two makes four" of the scientists and economists, viewing their logical equations as a stone wall that forbids human breath [20].
+
+But while the Underground Man screams his spite from beneath the floorboards [24], I have brought that wall into the office [107, 372]. In my writing, the bureaucracy is no longer an external system of laws; it has invaded the soul. It has become an infinite, administrative labyrinth where the files are kept in the attic bedrooms of tenements, and the judges are indistinguishable from the laundry-girls and the clerks [84, 102]. The absurd is not a philosophical concept; it is the daily routine of an office where the rules are hidden, the authority is unapproachable, and yet the executioner’s knife is always kept sharp, waiting in the drawer [84, 102].
+
+3. Isolation and the Sickness of Consciousness
+"I am a sick man... I am a spiteful man," writes Dostoevsky’s narrator in his dark cellar [24]. He is sick because he is hyper-conscious [20]. He suffers from the disease of self-observation—a terminal, reflective paralysis where every thought immediately breeds its own contradiction, leaving him unable to take a single step in real life [378]. 
+
+How well I know this sickness! It is the "lethal sequence" of my own diaries—the terrible compulsion to observe my own mind as it writes, to analyze the muscle of my forehead as it trembles with the desire to put pen to paper [375, 378]. This self-consciousness does not free us; it locks us in a "jammed lock" of introversion [416]. We become like Dostoevsky’s characters, living in narrow, coffin-like rooms—the "closet" of Raskolnikov, the cellar of the Underground Man—terrified of our fellow men, yet longing for a communication that our own pride and shame forbid us from ever achieving [59, 112].
+
+---
+
+II. The Rejections: The Cruelty of Resurrection and the Melodrama of Emotion
+
+And yet, despite this deep, subterranean communion, there are moments when I must close Dostoevsky’s books and thrust them away from me with a shudder of absolute rejection. He is my blood-relative, yes, but he is the relative who has survived a hanging and returned with a wild, fanatical light in his eyes, demanding that I join him in his madness [123, 368].
+
+1. The Delusion of Christian Resurrection
+Dostoevsky’s ultimate remedy for the torment of existence is Christian redemption through suffering. In Crime and Punishment, Sonia reads the story of Lazarus to Raskolnikov, and we are led to believe that through his exile in Siberia, through the heavy chains on his ankles and the cold wind of the steppes, his soul will be made clean, and he will rise into a new, sanctified life [124, 369]. 
+
+I reject this absolutely. For me, there is no Sonia, no New Jerusalem, no Lazarus rising from the tomb [124, 369]. Suffering in my world is not a furnace that purifies the gold; it is a cold, damp cellar where the mold merely grows thicker on the walls [255, 256]. I have read Kierkegaard’s The Sickness Unto Death [19, 379]. Despair is indeed a sickness of the spirit, but its true torment is precisely that it cannot consume us—it is a dying that never finishes, a death that is continuously the last thing but never ends [381, 382]. To hope for a resurrection, to believe that God will reach down His hand and turn our insect-carapace back into human skin, is a form of spiritual light-mindedness [381]. We do not rise; we are merely swept out by the charwoman’s broom and forgotten [97, 150].
+
+2. The Melodrama of the Russian Soul
+Dostoevsky’s characters are always in a state of high, feverish eruption. They have fits; they fall on their knees in the public square and kiss the muddy earth; they scream their confessions to crowds of strangers in taverns [20, 233]. Their suffering is a theatrical spectacle, a loud, operatic storm of tears and blood [233, 409].
+
+This is entirely alien to my nature and to the style I have labored so hard to cultivate. My writing knows no fits, no public confessions, no spectacular redemptions [122, 129]. It is flat, dry, and clinical—the style of a court brief or an accident report [122, 129]. My characters do not scream their anguish; they sit quietly at their desks, worried about their train schedules and their office managers, while their bodies slowly dry up and turn into wood or chitin [65, 97]. I do not throw myself onto the earth to weep; I sit on my sofa in the fading light, watching the shadows distort the plaster of my wall, too tired to rise, too isolated to call for Julie or Max [107, 374]. Dostoevsky’s characters are titans of passion; mine are simply clerks who have lost their identity cards [84, 102].
+
+3. The Lie of Amor Fati
+Dostoevsky, like Nietzsche, ultimately demands that we bless our fate, that we accept the "terrible beauty" of a world run by an inscrutable, monstrous God [55]. In The Idiot, Prince Myshkin looks at the face of a man about to be executed and sees in those last, precious minutes of life a supreme, ecstatic meaning—a vision of eternity that justifies all the cruelty of the earth [20].
+
+I cannot bless my fate. I cannot kiss the hand that strikes me down. My father’s anger is not a divine storm that I must accept with holy fear; it is a senseless, brutal weight that crushes my throat and makes my writing feel like a crime [61, 110]. My tuberculosis is not a cross that I carry toward Golgotha; it is a rotten spot in my throat that makes it difficult to swallow my milk [109, 363]. To pretend that this suffering has a secret, magnificent meaning is a form of cowardice [234]. The only honest response to the court is to defend oneself with quiet, stubborn logic, even while knowing that the defense is useless and the executioners are already waiting in the street [84, 102].
+
+---
+
+III. The Russian’s Verdict: Dostoevsky Interprets Kafka’s Nightmares
+
+If Fyodor Mikhailovich were to sit opposite me at this desk, his face lined with the scars of Semyonov Square and the penal colony of Omsk [123, 368], what would he say of my stories? How would the prophet of the underground interpret the nightmares I have committed to paper?
+
+1. The Metamorphosis: The Tragedy of the Unbroken Slave
+Looking at the giant insect that was once Gregor Samsa [65, 97], Dostoevsky would see a classic representation of the "ideal slave"—the man who has so completely surrendered his "I" to the capitalistic machine of his office and his ungrateful family that his soul has shrunk to the level of a beast [60, 238]. Gregor wakes up as a bug, but his first, agonizing thought is not of his lost humanity, but of his train schedule, his sample cases, and the anger of his chief clerk [97]. He has pawned his self to the world [385].
+
+"Ah," Dostoevsky would say, "this Gregor is an unbroken nature, but unbroken in his servitude! [233] He has accepted his insect-form as his punishment, his cage. He does not rage against his father’s thrown apple; he lets it rot in his back as a physical mark of his guilt [74, 97]. His death is not a tragedy of existential dread; it is the silent, vegetative suicide of a creature that has forgotten that it has an eternal soul [386]. He died 'like a dog' long before he became a beetle, because he chose the comfort of his father’s house and his office desk over the dangerous, terrifying freedom of the wilderness" [84, 255].
+
+2. The Trial: Josef K. as the Decadent of the Court
+In the execution of Josef K., Dostoevsky would find a terrifying confirmation of his own diagnosis of modern man’s spiritual bankruptcy [84, 102]. He would see Josef K. as a man of the "middle classes"—respectable, calculative, and utterly devoid of spiritual depth [60, 411]. K. is arrested, but he does not seek a priest; he seeks an advocate [102, 372]. He does not ask what sin he has committed before God; he asks what paragraph of the criminal code his arrest has violated [372, 401].
+
+Dostoevsky’s Porfiry Petrovich would laugh at Josef K.’s futile legal maneuvers [124, 369]. "My dear Josef," he would whisper, "the court is not outside you! The court does not want anything from you; it receives you when you come, and it dismisses you when you go [84, 102]. Your arrest is not a mistake of the police; it is the sudden, terrifying awakening of your own sleeping conscience [377]. You are guilty because you have lived a life of flat, respectable immediacy, pretending that your bank and your boarding-house were the universe [389]. And because you refuse to confess, because you refuse to humble your intellect before the paradox of your own sin, you must die in the dark, executed by two fat, theatrical gentlemen in top-hats, with a knife that turns in your throat twice—feeling only the shame that must outlive you" [84, 102].
+
+---
+
+IV. The Codex of the Siberian: 20 Grounded Quotes and Diary Reflections
+
+Here, I record twenty passages from Dostoevsky’s works that strike my heart like glass. Alongside each, I write the secret whisper of my own diary—the response of the Prague clerk to the Siberian giant [123, 368].
+
+1. Notes from Underground (Constance Garnett Trans.)
+> "I am a sick man... I am a spiteful man. I believe my liver is diseased. However, I know nothing at all about my disease, and do not know for certain what ails me." [24]
+   Theme*: `isolation`
+   Diary Reflection*: My liver is well, but my throat is a dry valley of dust and blood [109, 363]. I sit at my desk at the Institute, a spiteful clerk among papers, pretending to evaluate the injuries of workers [107]. Like him, I do not know my disease—or rather, I know it too well: it is Franz, the son of Hermann, who cannot live and cannot die [110, 381].
+
+2. Notes from Underground
+> "To be too conscious is an illness—a real, thorough-going illness."
+   Theme*: `suffering`
+   Diary Reflection*: A book must be an axe for the frozen sea in us [121]. But this consciousness is a hammer that breaks only our own fingers [280]. I look at my hand on the table; it is thin, white, the hand of a ghost [65, 363]. If I were stupider, I might marry Felice and sleep soundly in a double bed [108]. Instead, I keep watch over my own decay [374].
+
+3. The Brothers Karamazov (Constance Garnett Trans.)
+> "The man who lies to himself and listens to his own lie comes to such a pass that he cannot distinguish the truth within him, or around him, and so loses all respect for himself and for others."
+   Theme*: `guilt`
+   Diary Reflection*: I have lied to Felice in every letter [108, 112]. I wrote of love, but I wanted only a quiet room where I could write undisturbed by her breath [123, 368]. My engagement was a parodic court where I was both the accused and the prosecutor [108]. Now, my own lies have become a skin that I cannot peel off without tearing the flesh [378].
+
+4. The Brothers Karamazov
+> "The more I love humanity in general, the less I love man in particular."
+   Theme*: `isolation`
+   Diary Reflection*: I am fond of lovers, but I cannot love [363]. I look at the couples walking on the Charles Bridge; their closeness seems to me a beautiful, terrifying miracle of which I am completely incapable [363]. I am too far away, I am banished [363]. I love the idea of a family, but my father’s family is a chamber of horrors [364].
+
+5. The Brothers Karamazov (The Grand Inquisitor)
+> "For the secret of man's being is not only to live but to have something to live for. Without a stable conception of the object of life, man would choose to destroy himself rather than remain on the earth."
+   Theme*: `meaning`
+   Diary Reflection*: My writing is my only stable conception [123, 368]. It is the rock to which I cling [123, 368]. If the demon of the pen leaves me for a single night, I find myself standing before the window, measuring the distance to the stone pavement below with a cold, analytical eye [378].
+
+6. Crime and Punishment (Constance Garnett Trans.)
+> "Taking a new step, uttering a new word, is what people fear most."
+   Theme*: `resistance`
+   Diary Reflection*: My father has never feared a new step; his boots are heavy, and they leave deep marks in the carpet [110]. But for me, even to rise from my sofa and open the door to the maid requires a heroic effort of will [364, 374]. I stay in the dark, letting the letters pile up on my desk, a prisoner of my own hesitation [351].
+
+7. The Brothers Karamazov
+> "Remember particularly that you cannot be a judge of anyone. For no one can judge a criminal, until he recognizes that he himself is just such a criminal as the man standing before him."
+   Theme*: `guilt`
+   Diary Reflection*: The judges of my court sit in the dark attic bedrooms, their collars greasy, their hands smelling of old cabbage [84, 102]. They are corrupt, they are petty, yet they are right [102]. I cannot judge them because their corruption is only a mirror of my own spiritual deformity [29, 102].
+
+8. The Brothers Karamazov
+> "What is hell? I maintain that it is the suffering of being unable to love."
+   Theme*: `suffering`
+   Diary Reflection*: Hell is a small room in Prague where the light from the street-lamp cuts across the ceiling like a yellow knife [374]. I hear my sister Ottla talking to her husband in the next room; their voice is warm, human [108]. I sit alone with my notebook, cold as a glacier, writing sentences that no one will ever read [114, 335].
+
+9. Crime and Punishment
+> "Pain and suffering are always inevitable for a large intelligence and a deep heart. The really great men must, I think, have great sadness on earth."
+   Theme*: `suffering`
+   Diary Reflection*: Dostoevsky’s sadness is a mountain peak, rose-garlanded by the setting sun [338]. My sadness is a low-grade fever that makes my collar feel too tight [108]. I am no great man; I am only a clerk who has spent his youth calculating the insurance premiums of bricklayers [107].
+
+10. Crime and Punishment
+> "The man who has a conscience suffers whilst acknowledging his sin. That is his punishment—besides the prison."
+   Theme*: `guilt`
+   Diary Reflection*: My prison is my body, my office, my father’s fancy-goods shop [64, 72]. But my conscience is the executioner’s assistant [84, 102]. It kisses me while it bites [40]. Every sentence I write is an acknowledgment of my sin, and every page is another month added to my sentence [351].
+
+11. The Idiot (Constance Garnett Trans.)
+> "I want to talk about everything with one person as with myself."
+   Theme*: `isolation`
+   Diary Reflection*: I had Max, but Max has turned his literature into a sermon for Zionism [111]. I had Milena, but Milena is in Vienna, and her letters are too bright, too demanding for my dim eyes [109, 363]. I have only my diary, this silent, grey beast that sits on my knees and listens to my pen scratch its skin [351].
+
+12. The House of the Dead
+> "Man is a creature that can get accustomed to anything, and I think that is the best definition of him."
+   Theme*: `acceptance`
+   Diary Reflection*: Gregor Samsa became accustomed to his insect-body [65, 97]. He learned how to crawl on the ceiling, how to find pleasure in a rotten piece of cheese [97]. This is the most terrifying thing of all—not the transformation itself, but our infinite, cow-like patience in accepting it [385, 411].
+
+13. The Brothers Karamazov
+> "To love someone means to see them as God intended them to be."
+   Theme*: `meaning`
+   Diary Reflection*: My father sees me only as a weak, useless creature who spends his nights ruining his eyes with ink [61, 110]. If God intended me to be a writer, He has hidden His intention so deeply in my sick lungs that even I can find it only in my dreams [109, 363].
+
+14. The Idiot
+> "Nothing in this world is harder than speaking the truth, nothing easier than flattery."
+   Theme*: `resistance`
+   Diary Reflection*: In my appeals at the Institute, I write only lies of flattery [107]. I write of 'accident prevention' and 'social progress', while I know that the machine will continue to chew up the fingers of the workers as long as the factory stands [61, 260]. The only truth is the blood on the iron gears [61, 108].
+
+15. Notes from Underground
+> "It is the secrets that make us who we are. Every man has some reminiscences which he would not tell to everyone, but only to his friends. He has others which he would not reveal even to his friends, but only to himself, and that in secret."
+   Theme*: `isolation`
+   Diary Reflection*: My secret is my writing [123, 368]. I have asked Max to burn it all when I die [111]. I do not want the world to look into the dirtiest corners of my cellar [309]. Books are written to hide what is in us, and my ultimate opinions must remain forever behind the locked door of my introversion [54, 416].
+
+16. The Brothers Karamazov
+> "We sometimes speak of 'bestial' cruelty, but that is very unfair to beasts. No beast could ever be as cruel as a man, so artistically, so artistically cruel."
+   Theme*: `suffering`
+   Diary Reflection*: The torture machine in my penal colony is a work of high, artistic engineering [108]. It writes the commandment directly into the skin of the condemned with a needle of glass and steel [108]. The officer loves his machine like a bride; he dies in its gears because he cannot live in a world where its art is no longer understood [108].
+
+17. The Idiot
+> "The soul is healed by being with children."
+   Theme*: `acceptance`
+   Diary Reflection*: My sister Valli has children, but they look at me with silent, solemn eyes, as if they knew that their uncle is a strange, dangerous insect that must not be touched [64, 110]. I cannot heal my soul; I can only keep it quiet with a little dose of work and solitude [387, 395].
+
+18. Notes from Underground
+> "A man's entire life is nothing but a quest to prove to himself that he is a man and not a piano key."
+   Theme*: `freedom`
+   Diary Reflection*: I am a key on my father’s typewriter [114]. Every time his heavy finger strikes my head, I must print the letter he has chosen, whether it be a Yea or a Nay [29, 114]. My only freedom is to stick in the carriage, to jam the mechanism with my own silence [438].
+
+19. The Double (Constance Garnett Trans.)
+> "The double is the most terrible of all encounters, because it is the encounter with oneself as an enemy."
+   Theme*: `isolation`
+   Diary Reflection*: I meet my double every morning in the mirror [378]. He is a sick, pale clerk with a high forehead and a mouth that smells of laryngeal decay [109, 363]. He looks at me with a cold, mocking smile, as if to say: "You have spent another night writing, and yet you are still only Franz Kafka, the son of Hermann" [110, 351].
+
+20. The Devils (Constance Garnett Trans.)
+> "If you want to overcome the world, overcome yourself."
+   Theme*: `freedom`
+   Diary Reflection*: I have overcome myself so completely that there is nothing left of me but a shadow [390]. I have denied myself marriage, children, my father’s respect, and the comfort of a sound body, all for the sake of my art [108, 123]. And yet, the world remains, cold and unmoving, outside my window, waiting to bury me in the Jewish cemetery of Olšany [109].
+
+---
+
+V. Epilogue: The Falling of the Leaf
+
+Dostoevsky died in 1912, two years before my breakthrough night [107, 108]. He was buried in the Alexander Nevsky Lavra in St. Petersburg, carried to his grave by thousands of students and writers who saw in him the very voice of Russia [25, 230]. 
+
+When my turn comes, there will be no Lavra, no crowds, no national mourning [109]. I shall die quietly in a sanatorium in Kierling, my throat closed by tuberculosis, unable to speak, unable to ask for a drop of water [109, 133]. My sisters will carry my thin body to the family grave in Straschnitz, while my father grumbles about the cost of the funeral [64, 109]. 
+
+But Dostoevsky’s books will remain on my desk, their covers stained with my sweat and the oil of my lamp [20, 351]. He is my blood-relative, the terrifying elder brother who went before me into the dark [123, 368]. I have not followed him to Siberia, nor have I climbed his Moriah with a knife in my hand [123, 144]. I have stayed in my office, a quiet clerk who wrote in the margins of his own subjection [107, 129]. But in the silence of my night, I have heard his chains clanking under the floorboards, and I have known that we are both prisoners of the same, eternal court [84, 123].
+
+---
+
+Sources Cited:
+   [4] i GUILT AND THE CONSCIENCE IN NIETZSCHE, FREUD AND KAFKA* (UKZN Dissertation)
+   [20] Architectural Blueprint and Acquisition Guide: The Franz Kafka Universal Philosophy Corpus* (Ingestion Registry)
+   [24] Existentialism in Dostoevsky, Kafka, Nietzsche* (Scribd/PDF)
+   [45] The Nose (Gogol Short Story)* (Wikipedia)
+   [54] EXSISTENTIALISM OF THE CHARACTERS IN THE NOVEL* (Proceedings UNIKOM)
+   [59] Existential Plight of Gregor Samsa* (IJRAR)
+   [61] Ibid.*, p. 11
+   [64] Franz Kafka Biography* (Mantex)
+   [65] The Metamorphosis Study Guide* (Mantex)
+   [72] Franz Kafka Biography* (Mantex/Roy Johnson 2015)
+   [73] Ibid.*, p. 3
+   [74] The Metamorphosis Plot Summary* (Mantex)
+   [84] The Trial Study Guide* (Mantex)
+   [97] The Metamorphosis Summary* (Mantex)
+   [102] The Trial Study Guide* (Mantex)
+   [107] Franz Kafka Chronology* (Oxford/Duttlinger)
+   [108] Ibid.*, p. xix (1914-1915)
+   [109] Ibid.*, p. xx (1920-1924)
+   [110] Franz Kafka in Context* (Oxford/Duttlinger)
+   [111] Ibid.*, p. 20 (Max Brod as posthumous executor)
+   [112] Ibid.*, p. 22 (Family and friendship hierarchies)
+   [114] Ibid.*, p. 60 (Kafka's stylistic practices and frameworks)
+   [121] Ibid.*, p. 81 (Kafka's Reading: "A book should be the axe...")
+   [123] Ibid.*, p. 84 (Four blood-relatives: Kleist, Grillparzer, Flaubert, Dostoevsky)
+   [124] Ibid.*, p. 85 (Dostoevsky novels: Crime and Punishment and The Brothers Karamazov)
+   [129] Ibid.*, p. 88 (Philosophy and abstract thought in Kafka's work)
+   [133] Ibid.*, p. xx (Prague recitations and theater appearances)
+   [230] The Will to Power* (Nietzsche/Ludovici)
+   [233] Ibid.*, p. 192 (Nietzsche on criminals and Dostoevsky)
+   [234] Ibid.*, p. 193 (Nietzsche on remorse and action)
+   [238] Ibid.*, p. 289 (Nietzsche on ideal slaves and the herd)
+   [255] Thus Spake Zarathustra* (Nietzsche/Thomas Common)
+   [256] Ibid.*, p. 10 (Sickness and melancholy)
+   [260] Ibid.*, p. 12 (Nietzsche on the cold monster of the state)
+   [280] Ibid.*, p. 15 (Nietzsche on the anvil of the spirit)
+   [309] Ibid.*, p. 20 (Nietzsche on secret dirt and exposure)
+   [335] Beyond Good and Evil* (Nietzsche/Helen Zimmern)
+   [351] The Diaries of Franz Kafka* (Schocken/Brod)
+   [363] Franz Kafka in Context* (Oxford/Duttlinger)
+   [364] Ibid.*, p. 9 (Anthony Northey on Kafka's family)
+   [367] Ibid.*, p. 74 (Judith Ryan on Kafka's health and expressionism)
+   [368] Ibid.*, p. 84 (Ritchie Robertson on Kafka's Reading)
+   [369] Ibid.*, p. 85 (The Trial as a Dostoevsky novel)
+   [372] Ibid.*, p. 187 (Theodore Ziolkowski on Kafka and Law)
+   [374] Ibid.*, p. 219 (Carolin Duttlinger on self-observation)
+   [375] Ibid.*, p. 220
+   Passages [379-418] from Søren Kierkegaard's The Sickness Unto Death (Walter Lowrie Trans. 1941)*

@@ -1,0 +1,8 @@
+=== METADATA ===
+source_type: test_verification
+philosopher: test_philosopher
+school: test_school
+era: test_era
+original_work: Test Verification File
+=== END METADATA ===
+This is a test chunk to verify the pipeline actually writes to Supabase.

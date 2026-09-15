@@ -1,0 +1,24 @@
+{
+  "files_done": [
+    "kafka-reads-aristotle.md",
+    "kafka-reads-aristotle.txt",
+    "kafka-reads-confucius.md",
+    "kafka-reads-confucius.txt",
+    "kafka-reads-dostoevsky.md",
+    "kafka-reads-dostoevsky.txt",
+    "kafka-reads-marcus-aurelius.md",
+    "kafka-reads-marcus-aurelius.txt",
+    "kafka-reads-nietzsche.md",
+    "kafka-reads-nietzsche.txt",
+    "kafka-reads-plato.md",
+    "kafka-reads-plato.txt",
+    "kafka-reads-socrates.md",
+    "kafka-reads-socrates.txt"
+  ],
+  "chunks_ingested": 1849,
+  "last_file": "kafka-reads-socrates.txt",
+  "last_chunk_index": 16,
+  "date": "2026-09-14",
+  "daily_api_calls": 212,
+  "daily_tokens": 377582
+}

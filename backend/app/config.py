@@ -42,7 +42,7 @@ class Settings(BaseSettings):
         description="Fallback OpenRouter model identifier",
     )
     embedding_model: str = Field(
-        default="models/gemini-embedding-001",
+        default="gemini-embedding-2",
         description="Gemini embedding model identifier",
     )
     embedding_dimensions: int = Field(
@@ -51,9 +51,15 @@ class Settings(BaseSettings):
     )
 
     # ── Token Budget ───────────────────────────────────────────────────
-    max_total_tokens: int = Field(default=4096, description="Hard ceiling for prompt + output")
-    max_output_tokens: int = Field(default=512, description="Max tokens for LLM response")
-    max_prompt_tokens: int = Field(default=3584, description="Max tokens for assembled prompt")
+    max_total_tokens: int = Field(
+        default=4096, description="Hard ceiling for prompt + output"
+    )
+    max_output_tokens: int = Field(
+        default=512, description="Max tokens for LLM response"
+    )
+    max_prompt_tokens: int = Field(
+        default=3584, description="Max tokens for assembled prompt"
+    )
 
     # ── RAG Settings ───────────────────────────────────────────────────
     similarity_threshold: float = Field(
@@ -62,13 +68,17 @@ class Settings(BaseSettings):
     )
     top_k_results: int = Field(default=5, description="Number of chunks to retrieve")
     chunk_size: int = Field(default=1024, description="Target chunk size in characters")
-    chunk_overlap: int = Field(default=64, description="Overlap between chunks in characters")
+    chunk_overlap: int = Field(
+        default=64, description="Overlap between chunks in characters"
+    )
 
     # ── LLM Generation ─────────────────────────────────────────────────
     llm_temperature: float = Field(default=0.7, description="LLM sampling temperature")
 
     # ── Retry Settings ─────────────────────────────────────────────────
-    max_retries: int = Field(default=3, description="Max retry attempts for external APIs")
+    max_retries: int = Field(
+        default=3, description="Max retry attempts for external APIs"
+    )
     retry_delays: list[float] = Field(
         default=[15.0, 30.0, 60.0],
         description="Exponential backoff delays in seconds",
@@ -98,7 +108,9 @@ class Settings(BaseSettings):
     environment: str = Field(default="development", description="Runtime environment")
     log_level: str = Field(default="INFO", description="Logging level")
     app_version: str = Field(default="0.1.0", description="Application version")
-    max_input_length: int = Field(default=2000, description="Max user message length in chars")
+    max_input_length: int = Field(
+        default=2000, description="Max user message length in chars"
+    )
 
     # ── Clone Whitelist ────────────────────────────────────────────────
     valid_clone_ids: FrozenSet[str] = Field(

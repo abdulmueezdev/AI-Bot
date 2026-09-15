@@ -46,8 +46,8 @@ class TestEmbedder:
 
         texts = ["Text 1", "Text 2"]
         results: list[list[float]] = []
-        async for batch in embed_texts(texts, clone_id="alucard"):
-            results.extend(batch)
+        async for batch_embeddings, tokens in embed_texts(texts, clone_id="alucard"):
+            results.extend(batch_embeddings)
         assert len(results) == 2
         assert len(results[0]) == 768
         assert len(results[1]) == 768

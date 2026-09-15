@@ -1,3 +1,8 @@
+=== METADATA ===
+source_type: text_corpus
+original_work: Franz_kafka_letter_to_felica.txt
+=== END METADATA ===
+
 ﻿Copyright © 1973 by Schocken Books, Inc.
 
 All rights reserved under International and Pan-American Copyright Conventions. Published

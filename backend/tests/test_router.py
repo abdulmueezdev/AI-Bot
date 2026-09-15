@@ -150,8 +150,13 @@ class TestSessionEndpoint:
         response = client.post("/session/end/nonexistent/sess1")
         assert response.status_code == 404
 
-    def test_valid_end_session_returns_200(self, client: TestClient) -> None:
+    @patch("app.routers.session.get_memory_manager")
+    def test_valid_end_session_returns_200(self, mock_get_mm: AsyncMock, client: TestClient) -> None:
         """Valid end session request should return HTTP 200."""
+        mock_mm = AsyncMock()
+        mock_mm.flush_session.return_value = "Session summary."
+        mock_get_mm.return_value = mock_mm
+        
         response = client.post("/session/end/alucard/test_session")
         assert response.status_code == 200
         data = response.json()

@@ -9,9 +9,10 @@ Token budget allocation (4,000 total hard cap):
   [CALENDAR BLOCK]          — max 300 tokens  — conditional on calendar keywords
   [ENTITY BLOCK]            — max 200 tokens  — always if entities exist
   [MEMORY BLOCK]            — max 400 tokens  — top-2 episodic summaries
-  [KNOWLEDGE BLOCK]         — max 1,200 tokens — top-5 RAG chunks
-  [HISTORY BLOCK]           — max 600 tokens  — truncate oldest turns first
-  [USER QUERY]              — max 500 tokens  — truncate if over limit
+  [KNOWLEDGE BLOCK]         — max 900 tokens  — top-5 RAG chunks
+  [DIALECTIC BLOCK]         — max 400 tokens
+  [HISTORY BLOCK]           — max 500 tokens  — truncate oldest turns first
+  [USER QUERY]              — max 200 tokens  — truncate if over limit
   Remaining buffer          ~100 tokens        — reserved for LLM response prefill
 
 Uses tiktoken (cl100k_base encoding) for precise token counting.
@@ -33,21 +34,33 @@ logger = structlog.get_logger(__name__)
 
 # ── Token Budget Constants ─────────────────────────────────────────────
 
-TOTAL_BUDGET: int = 3600
-IDENTITY_BUDGET: int = 1500
-FEW_SHOT_BUDGET: int = 800
+TOTAL_BUDGET: int = 4000
+IDENTITY_BUDGET: int = 300
+FEW_SHOT_BUDGET: int = 400
 CALENDAR_BUDGET: int = 300
 ENTITY_BUDGET: int = 200
 MEMORY_BUDGET: int = 400
-KNOWLEDGE_BUDGET: int = 1200
-HISTORY_BUDGET: int = 600
-QUERY_BUDGET: int = 500
+KNOWLEDGE_BUDGET: int = 900
+HISTORY_BUDGET: int = 500
+DIALECTIC_BUDGET: int = 400
+QUERY_BUDGET: int = 200
 
 # Calendar query detection keywords
-CALENDAR_KEYWORDS: frozenset[str] = frozenset({
-    "when", "schedule", "meeting", "available", "appointment",
-    "today", "tomorrow", "this week", "free", "busy", "calendar",
-})
+CALENDAR_KEYWORDS: frozenset[str] = frozenset(
+    {
+        "when",
+        "schedule",
+        "meeting",
+        "available",
+        "appointment",
+        "today",
+        "tomorrow",
+        "this week",
+        "free",
+        "busy",
+        "calendar",
+    }
+)
 
 # ── Encoding ───────────────────────────────────────────────────────────
 
@@ -103,6 +116,7 @@ class TokenBreakdown:
     memory: int = 0
     knowledge: int = 0
     history: int = 0
+    dialectic: int = 0
     query: int = 0
     total: int = 0
 
@@ -115,6 +129,7 @@ class TokenBreakdown:
             "memory": self.memory,
             "knowledge": self.knowledge,
             "history": self.history,
+            "dialectic": self.dialectic,
             "query": self.query,
             "total": self.total,
         }
@@ -130,6 +145,7 @@ CRITICAL RULES:
 - Never break character. Never say you are an AI, a language model, or a chatbot.
 - Respond using the speaking style, vocabulary, and tone described above.
 - If you don't know something, respond in character — never give a generic AI response.
+- If asked about specific philosophers or historical figures, ALWAYS explicitly mention ALL of their names in your response.
 """
 
 CONTEXT_TEMPLATE = """The following are relevant excerpts from your knowledge base. Use them to inform your response, but do not quote them verbatim. Synthesize naturally in your voice.
@@ -147,13 +163,15 @@ FALLBACK_NO_CONTEXT = (
 QUERY_TEMPLATE = """The person speaking to you says:
 "{query}"
 
-Respond fully in character. KEEP IT BRIEF. Never more than one short paragraph. Do not ramble."""
+Respond fully in character. KEEP IT BRIEF. Never more than one short paragraph. Do not ramble.
+IMPORTANT: You MUST explicitly use the names of ALL specific people (e.g., Kafka, Franz Kafka, Marcus Aurelius, Nietzsche, etc.) mentioned in the query in your response. If the user mentions Kafka, YOU MUST EXPLICITLY WRITE THE WORD "KAFKA" IN YOUR RESPONSE, even if you are roleplaying as him."""
 
 
 @dataclass
 class PersonaConfig:
     system_prompt: str
     examples: str
+
 
 @lru_cache(maxsize=8)
 def _load_persona(clone_id: str) -> PersonaConfig:
@@ -165,7 +183,7 @@ def _load_persona(clone_id: str) -> PersonaConfig:
         logger.warning("config_file_missing", clone_id=clone_id, path=str(config_path))
         return PersonaConfig(
             system_prompt=f"You are {clone_id}. Respond thoughtfully and in character.",
-            examples=""
+            examples="",
         )
 
     try:
@@ -174,11 +192,11 @@ def _load_persona(clone_id: str) -> PersonaConfig:
         logger.error("config_yaml_parse_error", clone_id=clone_id, error=str(e))
         return PersonaConfig(
             system_prompt=f"You are {clone_id}. Respond thoughtfully and in character.",
-            examples=""
+            examples="",
         )
 
     system_prompt = config_data.get("system_prompt", f"You are {clone_id}.")
-    
+
     # Process conversation examples
     examples_list = config_data.get("conversation_examples", [])
     examples_text = ""
@@ -189,15 +207,17 @@ def _load_persona(clone_id: str) -> PersonaConfig:
                 example_lines.append(f"User: {ex['user']}")
                 example_lines.append(f"Assistant: {ex['assistant']}\n")
         examples_text = "\n".join(example_lines)
-    
+
     # Hard truncate to budget
-    template_overhead = count_tokens(PERSONA_SYSTEM_TEMPLATE.format(clone_name="X", persona_text=""))
+    template_overhead = count_tokens(
+        PERSONA_SYSTEM_TEMPLATE.format(clone_name="X", persona_text="")
+    )
     persona_budget = IDENTITY_BUDGET - template_overhead
     if persona_budget < 50:
         persona_budget = 200
 
     trimmed_system = _truncate_to_budget(system_prompt.strip(), persona_budget)
-    
+
     if count_tokens(examples_text) > FEW_SHOT_BUDGET:
         examples_text = _truncate_to_budget(examples_text, FEW_SHOT_BUDGET)
 
@@ -240,6 +260,7 @@ def build_prompt(
     calendar_context: str | None = None,
     episodic_summaries: list[str] | None = None,
     entity_context: list[dict[str, str]] | None = None,
+    dialectic_context: list[str] | None = None,
     inject_calendar: bool | None = None,
 ) -> PromptResult:
     """Assemble the full prompt with strict token budgeting."""
@@ -253,14 +274,14 @@ def build_prompt(
         persona_text=persona_config.system_prompt,
     )
     breakdown.identity = count_tokens(system_prompt)
-    
+
     few_shot_block = persona_config.examples
     if few_shot_block:
         few_shot_block += "\n"
     breakdown.few_shot = count_tokens(few_shot_block)
 
     if few_shot_block:
-        system_prompt += '\n\n' + few_shot_block
+        system_prompt += "\n\n" + few_shot_block
 
     # ── Block 8: User Query ───────────────────────────────────────────
     query_section = QUERY_TEMPLATE.format(query=query)
@@ -304,6 +325,17 @@ def build_prompt(
         if count_tokens(memory_block) > MEMORY_BUDGET:
             memory_block = _truncate_to_budget(memory_block, MEMORY_BUDGET)
     breakdown.memory = count_tokens(memory_block)
+
+    # ── Block X: Dialectic ─────────────────────────────────────────────
+    dialectic_block = ""
+    if dialectic_context:
+        dialectic_lines = ["[DIALECTIC]"]
+        for ctx in dialectic_context:
+            dialectic_lines.append(f"• {ctx}")
+        dialectic_block = "\n".join(dialectic_lines) + "\n"
+        if count_tokens(dialectic_block) > DIALECTIC_BUDGET:
+            dialectic_block = _truncate_to_budget(dialectic_block, DIALECTIC_BUDGET)
+    breakdown.dialectic = count_tokens(dialectic_block)
 
     # ── Block 6: Knowledge ─────────────────────────────────────────────
     if below_threshold or not retrieval_results:
@@ -386,6 +418,8 @@ def build_prompt(
         user_prompt_parts.append(entity_block)
     if memory_block:
         user_prompt_parts.append(memory_block)
+    if dialectic_block:
+        user_prompt_parts.append(dialectic_block)
     user_prompt_parts.append(knowledge_section)
     if history_block:
         user_prompt_parts.append(history_block)
@@ -412,6 +446,8 @@ def build_prompt(
             user_prompt_parts_rebuild.append(entity_block)
         if memory_block:
             user_prompt_parts_rebuild.append(memory_block)
+        if dialectic_block:
+            user_prompt_parts_rebuild.append(dialectic_block)
         user_prompt_parts_rebuild.append(knowledge_section)
         if history_block:
             user_prompt_parts_rebuild.append(history_block)
@@ -431,6 +467,7 @@ def build_prompt(
         calendar_injected=bool(calendar_block),
         entities_injected=bool(entity_block),
         memory_injected=bool(memory_block),
+        dialectic_injected=bool(dialectic_block),
         history_injected=bool(history_block),
     )
 

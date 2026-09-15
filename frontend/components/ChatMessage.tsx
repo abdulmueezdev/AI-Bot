@@ -1,5 +1,9 @@
+import { useStreamParser } from "@/hooks/useStreamParser";
+import DialecticSpark from "@/components/effects/DialecticSpark";
+
 export default function ChatMessage({ message }: { message: { role: string; content: string } }) {
   const isAssistant = message.role === "assistant";
+  const { elements, hasDialecticSpark } = useStreamParser(message.content);
 
   if (isAssistant) {
     return (
@@ -7,8 +11,9 @@ export default function ChatMessage({ message }: { message: { role: string; cont
         <div className="absolute -left-12 -top-4 text-8xl font-black text-brutal-accent opacity-5 z-0 transform -rotate-12 select-none">
           K.
         </div>
-        <div className="font-headline-lg font-black text-lg md:text-2xl text-brutal-text leading-snug tracking-normal break-words z-10 relative mt-2">
-          {message.content}
+        <div className="font-headline-lg font-black text-lg md:text-2xl text-brutal-text leading-snug tracking-normal break-words z-10 relative mt-2 relative">
+          <DialecticSpark isActive={hasDialecticSpark} />
+          {elements}
         </div>
       </div>
     );

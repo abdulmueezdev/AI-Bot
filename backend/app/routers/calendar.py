@@ -26,12 +26,8 @@ class CalendarStatusResponse(BaseModel):
         description="Seconds since last cache refresh. -1 if never synced."
     )
     event_count: int = Field(description="Number of cached events.")
-    last_sync_timestamp: str | None = Field(
-        description="ISO timestamp of last sync."
-    )
-    sync_error: str | None = Field(
-        description="Last sync error message, if any."
-    )
+    last_sync_timestamp: str | None = Field(description="ISO timestamp of last sync.")
+    sync_error: str | None = Field(description="Last sync error message, if any.")
     status: str = Field(description="Cache status: fresh, stale, or never_synced.")
 
 

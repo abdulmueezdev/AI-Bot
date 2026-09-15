@@ -181,9 +181,7 @@ class CalendarSync:
             # Run synchronous API call in thread
             import asyncio
 
-            events = await asyncio.to_thread(
-                self._fetch_events, time_min, time_max
-            )
+            events = await asyncio.to_thread(self._fetch_events, time_min, time_max)
 
             self._cache[clone_id] = CalendarCache(
                 events=events,
@@ -214,9 +212,7 @@ class CalendarSync:
             )
             return False
 
-    def _fetch_events(
-        self, time_min: str, time_max: str
-    ) -> list[CalendarEvent]:
+    def _fetch_events(self, time_min: str, time_max: str) -> list[CalendarEvent]:
         """Fetch events from Google Calendar API (synchronous).
 
         Args:

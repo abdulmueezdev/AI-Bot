@@ -1,27 +1,33 @@
 """Document ingestion — loads, chunks, embeds, and stores clone knowledge.
 
-Supports: .md (semantic by headers), .csv (row-per-chunk), .json (QA pairs),
-.txt (recursive splitting). All chunks are tagged with clone_id metadata.
+Supports rate limiting, state resumption, and tiktoken-based chunking.
 """
 
 from __future__ import annotations
 
-import csv
+import asyncio
+import datetime
 import hashlib
 import json
-import re
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 import structlog
+import tiktoken
 
 from app.config import get_settings
 from app.embedder import embed_texts
-from app.vector_store import add_documents, delete_collection, delete_file_chunks, get_file_chunk_count
+from app.vector_store import add_documents, delete_collection, delete_file_chunks
 
 logger = structlog.get_logger(__name__)
+
+
+class DailyLimitReached(Exception):
+    """Raised when the daily Gemini API limit is reached."""
+
+    pass
 
 
 @dataclass
@@ -44,16 +50,113 @@ class Chunk:
     chunk_id: str
 
 
-async def ingest_clone_data(clone_id: str, *, force: bool = False, file_name: str | None = None) -> IngestStats:
-    """Ingest all documents from a clone's data directory.
+def load_state(state_file: Path) -> dict[str, Any]:
+    today = datetime.date.today().isoformat()
+    if state_file.exists():
+        try:
+            from typing import cast
 
-    Args:
-        clone_id: The clone identifier.
-        force: If True, delete existing collection before re-ingesting.
+            with open(state_file, "r") as f:
+                state = cast(dict[str, Any], json.load(f))
+            if state.get("date") != today:
+                state["date"] = today
+                state["daily_api_calls"] = 0
+            return state
+        except Exception as e:
+            logger.error("corrupt_state_file", error=str(e))
 
-    Returns:
-        IngestStats with counts and any errors.
-    """
+    return {
+        "files_done": [],
+        "chunks_ingested": 0,
+        "last_file": None,
+        "last_chunk_index": 0,
+        "date": today,
+        "daily_api_calls": 0,
+    }
+
+
+def save_state(state_file: Path, state: dict[str, Any]) -> None:
+    with open(state_file, "w") as f:
+        json.dump(state, f, indent=2)
+
+
+def parse_metadata_header(file_path: Path) -> dict[str, Any] | None:
+    try:
+        content = file_path.read_text(encoding="utf-8")
+    except Exception:
+        return None
+
+    start_idx = content.find("=== METADATA ===")
+    if start_idx == -1:
+        return None
+
+    end_idx = content.find("=== END METADATA ===", start_idx)
+    if end_idx == -1:
+        return None
+
+    meta_block = content[start_idx + len("=== METADATA ===") : end_idx].strip()
+    metadata = {}
+    for line in meta_block.split("\n"):
+        if ":" in line:
+            k, v = line.split(":", 1)
+            metadata[k.strip()] = v.strip()
+    return metadata
+
+
+def _chunk_text_tiktoken(
+    content: str, filename: str, clone_id: str, base_meta: dict[str, Any]
+) -> list[Chunk]:
+    enc = tiktoken.get_encoding("cl100k_base")
+    tokens = enc.encode(content)
+
+    chunks: list[Chunk] = []
+    chunk_size = 512
+    overlap = 64
+    step = chunk_size - overlap
+
+    if not tokens:
+        return chunks
+
+    for i in range(0, len(tokens), step):
+        chunk_tokens = tokens[i : i + chunk_size]
+        text = enc.decode(chunk_tokens)
+
+        meta = base_meta.copy()
+        meta["clone_id"] = clone_id
+        meta["source_file"] = filename
+        meta["chunk_index"] = len(chunks)
+
+        chunk_id_raw = f"{filename}:{len(chunks)}:{text[:50]}"
+        chunk_id = hashlib.sha256(chunk_id_raw.encode("utf-8")).hexdigest()[:16]
+
+        chunks.append(Chunk(text=text.strip(), metadata=meta, chunk_id=chunk_id))
+
+    return chunks
+
+
+def _load_and_chunk_file(file_path: Path, clone_id: str) -> list[Chunk]:
+    """Load a file, parse metadata, and split it into chunks."""
+
+    base_meta = parse_metadata_header(file_path) or {}
+
+    try:
+        content = file_path.read_text(encoding="utf-8")
+        start_idx = content.find("=== METADATA ===")
+        if start_idx != -1:
+            end_idx = content.find("=== END METADATA ===", start_idx)
+            if end_idx != -1:
+                content = content[:start_idx] + content[end_idx + len("=== END METADATA ===") :]
+                content = content.strip()
+    except Exception as e:
+        logger.error("file_read_error", file=file_path.name, error=str(e))
+        return []
+
+    return _chunk_text_tiktoken(content, file_path.name, clone_id, base_meta)
+
+
+async def ingest_clone_data(
+    clone_id: str, *, force: bool = False, file_name: str | None = None
+) -> IngestStats:
     settings = get_settings()
     start_time = time.monotonic()
     stats = IngestStats(clone_id=clone_id)
@@ -64,41 +167,70 @@ async def ingest_clone_data(clone_id: str, *, force: bool = False, file_name: st
         logger.error("ingest_data_dir_missing", clone_id=clone_id, path=str(data_dir))
         return stats
 
-    # Also ingest the persona file as knowledge
-    persona_path = settings.get_clone_persona_path(clone_id)
-    data_files: list[Path] = list(data_dir.iterdir())
-    if persona_path.exists():
-        data_files.append(persona_path)
+    state_file = data_dir.parent / "ingestion_state.json"
+    state = load_state(state_file)
 
-    if file_name:
-        data_files = [f for f in data_files if f.name == file_name]
+    today = datetime.date.today().isoformat()
+    if state.get("date") != today:
+        state["date"] = today
+        state["daily_api_calls"] = 0
+        state["daily_tokens"] = 0
+        save_state(state_file, state)
 
     if force:
+        state["files_done"] = []
+        state["last_file"] = None
+        state["last_chunk_index"] = 0
+        state["chunks_ingested"] = 0
+        save_state(state_file, state)
         if file_name:
             await delete_file_chunks(clone_id, file_name)
         else:
             await delete_collection(clone_id)
 
-    # Process each file
+    data_files: list[Path] = []
+    for f in data_dir.iterdir():
+        if f.is_file():
+            data_files.append(f)
+    notebookllm_dir = data_dir / "notebookllm"
+    if notebookllm_dir.exists():
+        for f in notebookllm_dir.iterdir():
+            if f.is_file():
+                data_files.append(f)
+
+    persona_path = settings.get_clone_persona_path(clone_id)
+    if persona_path.exists() and persona_path not in data_files:
+        data_files.append(persona_path)
+
+    if file_name:
+        data_files = [f for f in data_files if f.name == file_name]
+
+    # Pre-filtering step: Only process philosophy files
+    philosophy_keywords = [
+        "aristotle", "confucius", "dostoevsky", "marcus", "nietzsche", 
+        "plato", "socrates", "philosophy", "stoic", "existential"
+    ]
+    data_files = [
+        f for f in data_files 
+        if any(keyword in f.name.lower() for keyword in philosophy_keywords)
+        and f.suffix.lower() in ['.txt', '.md']
+    ]
+
+    # Sort files to ensure deterministic resumption
+    data_files.sort(key=lambda p: p.name)
+
+
     all_chunks: list[Chunk] = []
 
     for file_path in data_files:
-        if file_path.is_dir():
+        if file_path.name in state["files_done"]:
             continue
 
         try:
             chunks = _load_and_chunk_file(file_path, clone_id)
-            
-            # Check for existing chunks for resume functionality (unless force=True)
-            if not force:
-                existing_count = await get_file_chunk_count(clone_id, file_path.name)
-                if existing_count > 0:
-                    if existing_count >= len(chunks):
-                        logger.info("file_already_ingested", file=file_path.name, clone_id=clone_id, chunks=len(chunks))
-                        chunks = []
-                    else:
-                        logger.info("resuming_file", file=file_path.name, clone_id=clone_id, skip=existing_count, total=len(chunks))
-                        chunks = chunks[existing_count:]
+
+            if state["last_file"] == file_path.name:
+                chunks = chunks[state["last_chunk_index"] :]
 
             if chunks:
                 all_chunks.extend(chunks)
@@ -109,6 +241,9 @@ async def ingest_clone_data(clone_id: str, *, force: bool = False, file_name: st
                     file=file_path.name,
                     chunks=len(chunks),
                 )
+            else:
+                if state["last_file"] != file_path.name:
+                    state["files_done"].append(file_path.name)
         except Exception as exc:
             error_msg = f"Failed to process {file_path.name}: {exc}"
             stats.errors.append(error_msg)
@@ -120,35 +255,102 @@ async def ingest_clone_data(clone_id: str, *, force: bool = False, file_name: st
             )
 
     if not all_chunks:
-        stats.errors.append("No chunks generated from any file")
+        save_state(state_file, state)
         return stats
 
-    # Embed all chunks in batches and stream to Supabase immediately
     chunk_texts = [c.text for c in all_chunks]
     logger.info("embedding_start", clone_id=clone_id, total_chunks=len(chunk_texts))
 
-    batch_start = 0
+    batch_size = 15
+    total_batches = (len(all_chunks) + batch_size - 1) // batch_size
+    eta_hours = total_batches // 60
+    eta_mins = total_batches % 60
+    logger.info(
+        "eta_estimate",
+        message=f"Estimated completion: {eta_hours} hours {eta_mins} minutes from now",
+    )
+
     try:
-        async for batch_embeddings in embed_texts(chunk_texts, clone_id=clone_id):
-            batch_size = len(batch_embeddings)
+        batch_counter = 0
+        for batch_start in range(0, len(all_chunks), batch_size):
+            batch_counter += 1
             batch_chunks = all_chunks[batch_start : batch_start + batch_size]
-            batch_texts = chunk_texts[batch_start : batch_start + batch_size]
             
-            # Store in vector DB immediately
-            await add_documents(
-                clone_id,
-                chunks=batch_texts,
-                embeddings=batch_embeddings,
-                metadatas=[c.metadata for c in batch_chunks],
-                ids=[c.chunk_id for c in batch_chunks],
-            )
-            
-            batch_start += batch_size
-            stats.chunks_created += batch_size
-            
+            # Check the 930 API calls (chunks) limit BEFORE processing the batch
+            if state.get("daily_api_calls", 0) + len(batch_chunks) > 930:
+                save_state(state_file, state)
+                logger.info(
+                    "ingestion_paused_daily_limit",
+                    clone_id=clone_id,
+                    message="Daily target of 930 chunks reached. Pausing to preserve testing quota."
+                )
+                print("⏸️ INGESTION PAUSED — Daily target of 930 chunks reached. Pausing to preserve testing quota.")
+                return stats
+                
+            state["daily_api_calls"] = state.get("daily_api_calls", 0) + len(batch_chunks)
+            batch_texts = [c.text for c in batch_chunks]
+
+            async for batch_embeddings, tokens_consumed in embed_texts(
+                batch_texts, clone_id=clone_id
+            ):
+                state["daily_tokens"] = state.get("daily_tokens", 0) + tokens_consumed
+
+                remaining_batches = (
+                    len(all_chunks) - batch_start + batch_size - 1
+                ) // batch_size
+                current_total = state.get("chunks_ingested", 0) + len(batch_embeddings)
+
+                logger.info(
+                    "batch_metrics",
+                    clone_id=clone_id,
+                    message=f"Batch {batch_counter}: {len(batch_chunks)} chunks embedded ({current_total} total). RPM: {len(batch_chunks)}/100. ETA: {remaining_batches} minutes remaining.",
+                )
+                await add_documents(
+                    clone_id,
+                    chunks=batch_texts,
+                    embeddings=batch_embeddings,
+                    metadatas=[c.metadata for c in batch_chunks],
+                    ids=[c.chunk_id for c in batch_chunks],
+                )
+
+                stats.chunks_created += len(batch_embeddings)
+
+                last_chunk = batch_chunks[-1]
+                state["chunks_ingested"] += len(batch_embeddings)
+                state["last_file"] = last_chunk.metadata["source_file"]
+                state["last_chunk_index"] = last_chunk.metadata["chunk_index"] + 1
+
+                files_in_batch = set([c.metadata["source_file"] for c in batch_chunks])
+                for fname in files_in_batch:
+                    file_chunks = [
+                        c for c in all_chunks if c.metadata["source_file"] == fname
+                    ]
+                    if file_chunks and file_chunks[-1] in batch_chunks:
+                        if fname not in state["files_done"]:
+                            state["files_done"].append(fname)
+
+                save_state(state_file, state)
+
+                # If there are more chunks, wait 60s
+                if batch_start + batch_size < len(all_chunks):
+                    logger.info(
+                        "waiting_for_rate_limit",
+                        message="Waiting 60s before next batch...",
+                    )
+                    await asyncio.sleep(60)
+
+    except DailyLimitReached:
+        raise
     except RuntimeError as exc:
-        stats.errors.append(f"Embedding failed at chunk {batch_start}: {exc}")
-        logger.error("embedding_failed", clone_id=clone_id, error=str(exc))
+        if "Quota depleted" in str(exc):
+            save_state(state_file, state)
+            logger.info("ingestion_paused_daily_limit", clone_id=clone_id)
+            print("⏸️ INGESTION PAUSED — Resume tomorrow.")
+            return stats
+        else:
+            stats.errors.append(f"Embedding failed at chunk {batch_start}: {exc}")
+            logger.error("embedding_failed", clone_id=clone_id, error=str(exc))
+
     stats.elapsed_ms = (time.monotonic() - start_time) * 1000
 
     logger.info(
@@ -160,276 +362,8 @@ async def ingest_clone_data(clone_id: str, *, force: bool = False, file_name: st
         elapsed_ms=round(stats.elapsed_ms, 1),
     )
 
+    print(
+        f"INGESTION_COMPLETE — {state.get('chunks_ingested', 0)} total chunks, {state.get('daily_tokens', 0)} total tokens, {state.get('daily_api_calls', 0)} API calls over N days."
+    )
+
     return stats
-
-
-def _load_and_chunk_file(file_path: Path, clone_id: str) -> list[Chunk]:
-    """Load a file and split it into chunks based on file type.
-
-    Args:
-        file_path: Path to the source file.
-        clone_id: Clone identifier for metadata tagging.
-
-    Returns:
-        List of Chunk objects.
-    """
-    suffix = file_path.suffix.lower()
-    
-    if suffix == ".pdf":
-        return _chunk_pdf(file_path, clone_id)
-
-    content = file_path.read_text(encoding="utf-8")
-
-    if suffix == ".md":
-        return _chunk_markdown(content, file_path.name, clone_id)
-    elif suffix == ".txt":
-        return _chunk_plaintext(content, file_path.name, clone_id)
-    elif suffix == ".csv":
-        return _chunk_csv(content, file_path.name, clone_id)
-    elif suffix == ".json":
-        return _chunk_json(content, file_path.name, clone_id)
-    else:
-        logger.warning(
-            "unsupported_file_type",
-            clone_id=clone_id,
-            file=file_path.name,
-            suffix=suffix,
-        )
-        return []
-
-def _chunk_pdf(file_path: Path, clone_id: str) -> list[Chunk]:
-    """Chunk PDF — extract text and chunk it."""
-    try:
-        from pypdf import PdfReader
-    except ImportError:
-        logger.error("pypdf_missing", clone_id=clone_id)
-        return []
-        
-    try:
-        reader = PdfReader(str(file_path))
-        text = ""
-        for page in reader.pages:
-            page_text = page.extract_text()
-            if page_text:
-                text += page_text + "\n\n"
-        
-        if not text.strip():
-            logger.warning("pdf_no_text_extracted", file=file_path.name)
-            
-        return _chunk_markdown(text, file_path.name, clone_id)
-    except Exception as e:
-        logger.error("pdf_extraction_error", file=file_path.name, error=str(e))
-        return []
-
-
-def _chunk_markdown(content: str, filename: str, clone_id: str) -> list[Chunk]:
-    """Chunk markdown by headers, preserving semantic boundaries.
-
-    Splits on ## and ### headers. If a section exceeds chunk_size,
-    it is further split on paragraph boundaries with overlap.
-    """
-    settings = get_settings()
-    chunks: list[Chunk] = []
-
-    # Split on headers (## or ###)
-    sections = re.split(r"(?=^#{1,3}\s+)", content, flags=re.MULTILINE)
-
-    for section_idx, section in enumerate(sections):
-        section = section.strip()
-        if not section:
-            continue
-
-        # If section is small enough, use it as-is
-        if len(section) <= settings.chunk_size:
-            chunk_id = _generate_chunk_id(clone_id, filename, section_idx, 0)
-            chunks.append(Chunk(
-                text=section,
-                metadata={
-                    "clone_id": clone_id,
-                    "source_file": filename,
-                    "chunk_index": len(chunks),
-                    "section_index": section_idx,
-                },
-                chunk_id=chunk_id,
-            ))
-        else:
-            # Split large sections on paragraph boundaries
-            paragraphs = section.split("\n\n")
-            # If no paragraph breaks found, fall back to line-based splitting
-            if len(paragraphs) <= 1:
-                paragraphs = section.split("\n")
-            current_chunk = ""
-
-            for para_idx, para in enumerate(paragraphs):
-                para = para.strip()
-                if not para:
-                    continue
-
-                if len(current_chunk) + len(para) + 2 > settings.chunk_size and current_chunk:
-                    chunk_id = _generate_chunk_id(clone_id, filename, section_idx, len(chunks))
-                    chunks.append(Chunk(
-                        text=current_chunk.strip(),
-                        metadata={
-                            "clone_id": clone_id,
-                            "source_file": filename,
-                            "chunk_index": len(chunks),
-                            "section_index": section_idx,
-                        },
-                        chunk_id=chunk_id,
-                    ))
-                    # Overlap: keep last few sentences
-                    overlap_text = _get_overlap(current_chunk, settings.chunk_overlap)
-                    current_chunk = overlap_text + "\n\n" + para if overlap_text else para
-                else:
-                    current_chunk = current_chunk + "\n\n" + para if current_chunk else para
-
-            # Flush remaining
-            if current_chunk.strip():
-                chunk_id = _generate_chunk_id(clone_id, filename, section_idx, len(chunks))
-                chunks.append(Chunk(
-                    text=current_chunk.strip(),
-                    metadata={
-                        "clone_id": clone_id,
-                        "source_file": filename,
-                        "chunk_index": len(chunks),
-                        "section_index": section_idx,
-                    },
-                    chunk_id=chunk_id,
-                ))
-
-    return chunks
-
-
-def _chunk_csv(content: str, filename: str, clone_id: str) -> list[Chunk]:
-    """Chunk CSV — each row becomes a standalone chunk.
-
-    For FAQ-style CSVs, pairs query and response together.
-    """
-    import io
-
-    chunks: list[Chunk] = []
-    reader = csv.DictReader(io.StringIO(content))
-
-    for row_idx, row in enumerate(reader):
-        # Combine all fields into a single text
-        parts: list[str] = []
-        for key, value in row.items():
-            if value is not None:
-                str_value = str(value).strip()
-                if str_value:
-                    parts.append(f"{key}: {str_value}")
-        if not parts:
-            continue
-
-        text = "\n".join(parts)
-        chunk_id = _generate_chunk_id(clone_id, filename, row_idx, 0)
-
-        chunks.append(Chunk(
-            text=text,
-            metadata={
-                "clone_id": clone_id,
-                "source_file": filename,
-                "chunk_index": row_idx,
-                "content_type": "faq",
-            },
-            chunk_id=chunk_id,
-        ))
-
-    return chunks
-
-
-def _chunk_json(content: str, filename: str, clone_id: str) -> list[Chunk]:
-    """Chunk JSON — each QA pair or object becomes a chunk."""
-    chunks: list[Chunk] = []
-    data = json.loads(content)
-
-    if not isinstance(data, list):
-        data = [data]
-
-    for item_idx, item in enumerate(data):
-        if isinstance(item, dict):
-            # Handle QA pair format
-            if "question" in item and "answer" in item:
-                text = f"Q: {item['question']}\nA: {item['answer']}"
-            else:
-                # Generic dict — dump all fields
-                parts = [f"{k}: {v}" for k, v in item.items() if v]
-                text = "\n".join(parts)
-        else:
-            text = str(item)
-
-        if not text.strip():
-            continue
-
-        chunk_id = _generate_chunk_id(clone_id, filename, item_idx, 0)
-        chunks.append(Chunk(
-            text=text.strip(),
-            metadata={
-                "clone_id": clone_id,
-                "source_file": filename,
-                "chunk_index": item_idx,
-                "content_type": "qa",
-            },
-            chunk_id=chunk_id,
-        ))
-
-    return chunks
-
-
-def _chunk_plaintext(content: str, filename: str, clone_id: str) -> list[Chunk]:
-    settings = get_settings()
-    chunks: list[Chunk] = []
-    # Normalize line endings, split on any double or single newline
-    paragraphs = [p.strip() for p in re.split(r"\n{2,}|\n", content) if p.strip()]
-    current_chunk = ""
-    chunk_index = 0
-    for para in paragraphs:
-        if len(current_chunk) + len(para) + 1 > settings.chunk_size and current_chunk:
-            chunk_id = _generate_chunk_id(clone_id, filename, chunk_index, 0)
-            chunks.append(Chunk(
-                text=current_chunk.strip(),
-                metadata={
-                    "clone_id": clone_id,
-                    "source_file": filename,
-                    "chunk_index": chunk_index,
-                    "section_index": chunk_index,
-                },
-                chunk_id=chunk_id,
-            ))
-            chunk_index += 1
-            current_chunk = para
-        else:
-            current_chunk = (current_chunk + " " + para).strip()
-    if current_chunk:
-        chunk_id = _generate_chunk_id(clone_id, filename, chunk_index, 0)
-        chunks.append(Chunk(
-            text=current_chunk.strip(),
-            metadata={
-                "clone_id": clone_id,
-                "source_file": filename,
-                "chunk_index": chunk_index,
-                "section_index": chunk_index,
-            },
-            chunk_id=chunk_id,
-        ))
-    return chunks
-
-
-def _generate_chunk_id(clone_id: str, filename: str, section: int, chunk: int) -> str:
-    """Generate a deterministic, unique chunk ID."""
-    raw = f"{clone_id}:{filename}:{section}:{chunk}"
-    return hashlib.sha256(raw.encode()).hexdigest()[:16]
-
-
-def _get_overlap(text: str, overlap_chars: int) -> str:
-    """Get the last `overlap_chars` characters of text, aligned to sentence boundary."""
-    if len(text) <= overlap_chars:
-        return text
-
-    overlap_region = text[-overlap_chars:]
-    # Try to align to the start of a sentence
-    sentence_start = overlap_region.find(". ")
-    if sentence_start != -1:
-        return overlap_region[sentence_start + 2 :]
-
-    return overlap_region

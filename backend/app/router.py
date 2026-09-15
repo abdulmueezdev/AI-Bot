@@ -80,9 +80,7 @@ class HealthResponse(BaseModel):
 
     status: str
     version: str
-    clones: dict[str, int] = Field(
-        description="Map of clone_id to document count."
-    )
+    clones: dict[str, int] = Field(description="Map of clone_id to document count.")
 
 
 # ── Endpoints ──────────────────────────────────────────────────────────

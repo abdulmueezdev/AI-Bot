@@ -26,6 +26,10 @@ class FakeTableClient:
         self._parent._last_insert_rows = rows
         return self
 
+    def upsert(self, rows, on_conflict=None):
+        self._parent._last_insert_rows = rows
+        return self
+
     def execute(self):
         if self._behavior.get("raise_exception"):
             raise RuntimeError("Database error")
